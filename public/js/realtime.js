@@ -45,6 +45,7 @@ function renderOnline(ids) {
     const img = document.createElement('img');
     img.src = m.avatar;
     img.alt = m.name;
+    img.style.objectPosition = m.pos || '';
     img.title = m.name + (on ? ' (online)' : ' (offline)');
     img.className = 'w-7 h-7 rounded-full object-cover border-2 transition-all ' +
       (on ? 'border-green-400 opacity-100' : 'border-gray-700 opacity-30 grayscale');

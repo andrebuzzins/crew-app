@@ -84,7 +84,7 @@ function renderFeed() {
     const time = new Date(a.created_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
     return `
       <div class="flex items-center gap-3 bg-black bg-opacity-40 p-2 pr-3 rounded-2xl border border-white border-opacity-10">
-        <img src="${m.avatar}" class="w-9 h-9 rounded-full object-cover border border-gray-500">
+        <img src="${m.avatar}" style="${avatarPos(m)}" class="w-9 h-9 rounded-full object-cover border border-gray-500">
         <div class="flex-1 min-w-0">
           <span class="font-bold text-white">${m.name}</span>
           <span class="text-sm text-gray-300"> · <i class="fa-solid ${t.icon} ${t.color}"></i> ${t.label}</span>
@@ -98,16 +98,17 @@ function renderFeed() {
 function showActionToast(a) {
   const m = getMember(a.member_id) || { name: a.member_id, avatar: '' };
   const t = ACTION_TYPES[a.type] || { label: a.type };
-  showToast(`${m.name}: ${t.label}`, m.avatar);
+  showToast(`${m.name}: ${t.label}`, m.avatar, m.pos);
   if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
 }
 
 let toastTimer;
-function showToast(text, avatar) {
+function showToast(text, avatar, pos) {
   const el = document.getElementById('toast');
   document.getElementById('toast-text').innerText = text;
   const img = document.getElementById('toast-img');
   img.src = avatar || '';
+  img.style.objectPosition = pos || (me && avatar === me.avatar ? me.pos : '') || '';
   img.classList.toggle('hidden', !avatar);
   el.classList.remove('-translate-y-40', 'opacity-0');
   clearTimeout(toastTimer);
