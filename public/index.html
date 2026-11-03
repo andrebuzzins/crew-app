@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#050505">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Crew App</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+
+    <style>
+        :root {
+            --color-bg-1: #050505;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #f3f4f6;
+            background-color: var(--color-bg-1);
+            -webkit-tap-highlight-color: transparent;
+            background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('img/bg-main.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, .font-clash {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        /* --- STILE GLASSMORPHISM DARK --- */
+        .glass-card {
+            background: rgba(20, 20, 25, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border-radius: 28px;
+        }
+
+        .glass-input {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        .glass-input::placeholder { color: #9ca3af; }
+        .glass-input:focus {
+            outline: none;
+            background: rgba(0, 0, 0, 0.7);
+            box-shadow: 0 0 0 3px rgba(161, 196, 253, 0.3);
+        }
+
+        /* --- BOTTONI 3D --- */
+        .btn-3d {
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 24px;
+            box-shadow: 0 10px 0 rgba(0, 0, 0, 0.9), 0 15px 20px rgba(0,0,0,0.5);
+            transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            cursor: pointer;
+            color: white;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.9);
+        }
+
+        .btn-3d:active {
+            transform: translateY(10px);
+            box-shadow: 0 0 0 rgba(0, 0, 0, 0.9), 0 5px 10px rgba(0,0,0,0.5);
+        }
+
+        /* Bottoni Score Fanta Figa */
+        .btn-score {
+            background: rgba(40, 40, 40, 0.9);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.9), 0 10px 15px rgba(0,0,0,0.5);
+            transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-score:active {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 rgba(0, 0, 0, 0.9), 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="pb-20">
+
+    <!-- SCHERMATA "CHI SEI?" -->
+    <div id="whoami" class="hidden fixed inset-0 z-[100] flex-col justify-center px-6 bg-black bg-opacity-80 backdrop-blur-md">
+        <h1 class="text-4xl font-extrabold tracking-tight text-white text-center drop-shadow-md">Chi sei?</h1>
+        <p class="text-xs font-bold uppercase tracking-widest opacity-70 text-gray-300 text-center mt-2 mb-8">Scegli il tuo profilo</p>
+        <div id="whoami-grid" class="grid grid-cols-2 gap-5"></div>
+    </div>
+
+    <!-- Header dell'App -->
+    <header class="pt-10 pb-6 px-6 flex justify-between items-center sticky top-0 z-50 backdrop-blur-sm bg-black bg-opacity-20 border-b border-white border-opacity-10">
+        <div>
+            <h1 class="text-4xl font-extrabold tracking-tight text-white drop-shadow-md">Crew<span class="opacity-50">App</span></h1>
+            <div class="flex items-center gap-2 mt-1">
+                <p class="text-xs font-bold uppercase tracking-widest opacity-80 text-gray-300">Ecosistema Attivo</p>
+                <span id="online-count" class="text-[10px] font-bold text-green-400"></span>
+            </div>
+            <div id="online-list" class="flex gap-1 mt-2"></div>
+        </div>
+        <!-- Il mio profilo: tocca per cambiarlo -->
+        <button onclick="showWhoAmI()" class="flex flex-col items-center gap-1 flex-shrink-0" title="Cambia profilo">
+            <div class="w-12 h-12 rounded-full glass-card p-1 shadow-sm overflow-hidden">
+                <img id="my-avatar" src="img/fagio.jpeg" alt="Io" class="w-full h-full rounded-full object-cover">
+            </div>
+            <span id="my-name" class="text-[10px] font-bold uppercase tracking-widest text-gray-300"></span>
+        </button>
+    </header>
+
+    <!-- BANNER IN-APP (azioni degli altri, messaggi) -->
+    <div id="toast" class="fixed top-4 left-4 right-4 z-[90] -translate-y-40 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="glass-card flex items-center gap-3 p-3 pr-4 !rounded-2xl border-white border-opacity-30" style="background: rgba(20,20,25,0.9);">
+            <img id="toast-img" src="" class="w-10 h-10 rounded-full object-cover border border-gray-400">
+            <span id="toast-text" class="font-bold text-white"></span>
+        </div>
+    </div>
+
+    <main class="flex flex-col gap-10 px-6 relative z-10 mt-6">
+
+        <!-- SEZIONE: BACHECA ULTIME 6 ORE -->
+        <section class="flex flex-col gap-4">
+            <div class="flex items-center justify-between px-2">
+                <h2 class="text-xl font-clash font-extrabold text-white drop-shadow-md">Ultime 6 ore</h2>
+                <i class="fa-solid fa-clock-rotate-left text-gray-400"></i>
+            </div>
+            <div class="glass-card p-4">
+                <div id="feed-list" class="flex flex-col gap-2 max-h-72 overflow-y-auto"></div>
+            </div>
+        </section>
+
+        <!-- SEZIONE: FANTA FIGA -->
+        <section class="flex flex-col gap-4">
+            <h2 class="text-xl font-clash font-extrabold text-white px-2 drop-shadow-md">Fanta Figa</h2>
+
+            <div class="glass-card p-5 flex flex-col gap-4" style="background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.85)), url('img/bg-fanta.jpeg'); background-size: cover; background-position: center;">
+                <div id="fanta-setup" class="flex flex-col gap-3">
+                    <input type="text" id="fanta-event-name" placeholder="Nome Evento (es. Serata in Centro)" class="glass-input rounded-xl px-4 py-3 font-semibold w-full">
+                    <button onclick="creaEventoFanta()" class="w-full py-3 rounded-xl font-bold text-white tracking-widest uppercase bg-gradient-to-r from-blue-600 to-indigo-700 border border-white border-opacity-20 shadow-lg active:scale-95 transition-transform">
+                        Crea Evento
+                    </button>
+                </div>
+
+                <div id="fanta-grid" class="hidden flex-col gap-5 mt-2">
+                    <div class="text-center mb-2 relative">
+                        <input type="text" id="fanta-event-title" value="Serata" class="bg-transparent text-center font-clash font-extrabold text-2xl text-blue-400 outline-none w-full border-b border-dashed border-transparent focus:border-blue-500 transition-colors drop-shadow-md" title="Modifica nome evento">
+                        <div class="flex items-center justify-center gap-2 mt-2">
+                            <span class="text-xs font-bold uppercase tracking-widest opacity-80">Tempo restante:</span>
+                            <span id="fanta-timer" class="text-sm font-black text-red-500 bg-red-900 bg-opacity-40 border border-red-500 px-2 py-1 rounded-md transition-all">60s</span>
+                        </div>
+                    </div>
+                    <!-- Righe dei giocatori generate da js/app.js -->
+                    <div id="fanta-players" class="flex flex-col gap-5"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEZIONE: RADAR IG (contenuto di esempio, da ridefinire) -->
+        <section class="flex flex-col gap-4">
+            <div class="flex items-center justify-between px-2">
+                <h2 class="text-xl font-clash font-extrabold text-white drop-shadow-md">Radar IG</h2>
+                <button class="w-8 h-8 rounded-full bg-white bg-opacity-10 border border-white border-opacity-20 flex items-center justify-center text-blue-400 active:scale-90 transition-transform">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+
+            <div class="glass-card p-5 flex flex-col gap-5 relative overflow-hidden" style="background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('img/bg-radar.jpeg'); background-size: cover; background-position: center;">
+                <div class="flex items-center gap-4">
+                    <div class="relative">
+                        <img src="https://i.pravatar.cc/150?u=eddie_target" class="w-16 h-16 rounded-full border-2 border-gray-400 shadow-md">
+                        <div class="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-gray-900 rounded-full"></div>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-xl tracking-tight text-white drop-shadow-md">@eddie_troll</h3>
+                        <span class="text-xs font-semibold px-2 py-1 bg-black bg-opacity-60 border border-white border-opacity-20 rounded-md text-blue-400">OSSERVATO SPECIALE</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-3 max-h-48 overflow-y-auto pr-2">
+                    <div class="flex gap-3 items-start">
+                         <img src="img/lori.jpeg" class="w-8 h-8 rounded-full object-cover shadow-sm border border-gray-600">
+                         <div class="glass-input px-3 py-2 rounded-2xl rounded-tl-none w-full">
+                             <span class="text-[10px] font-bold text-blue-400 uppercase drop-shadow-sm">Lori</span>
+                             <p class="text-sm text-gray-200 font-medium">L'ho visto in centro con una tipa. Investigare.</p>
+                         </div>
+                    </div>
+                    <div class="flex gap-3 items-start flex-row-reverse text-right">
+                         <img src="img/buzzo.jpeg" class="w-8 h-8 rounded-full object-cover shadow-sm border border-gray-600">
+                         <div class="glass-input px-3 py-2 rounded-2xl rounded-tr-none w-full">
+                             <span class="text-[10px] font-bold text-orange-400 uppercase drop-shadow-sm">Buzzo</span>
+                             <p class="text-sm text-gray-200 font-medium">Confermo, ha rimosso l'ultima storia. C'è puzza di bruciato.</p>
+                         </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 mt-2">
+                    <input type="text" placeholder="Aggiungi una nota..." class="glass-input flex-1 rounded-xl px-4 py-2 text-sm font-semibold">
+                    <button class="w-10 h-10 rounded-xl bg-blue-600 bg-opacity-80 border border-blue-400 text-white shadow-lg active:scale-95 transition-transform flex justify-center items-center">
+                        <i class="fa-solid fa-paper-plane text-sm"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEZIONE: AZIONI RAPIDE -->
+        <section class="flex flex-col gap-4">
+            <h2 class="text-xl font-clash font-extrabold text-white px-2 drop-shadow-md">Azioni Rapide</h2>
+
+            <div class="flex gap-4 overflow-x-auto hide-scroll pb-6 pt-2 px-2">
+                <button class="btn-3d min-w-[160px] h-[160px] flex-shrink-0 flex flex-col items-center justify-center gap-3" onclick="triggerAction(this, 'barleo')" style="background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.8)), url('img/bg-barleo.jpeg'); background-size: cover; background-position: center;">
+                    <div class="w-16 h-16 rounded-full bg-black bg-opacity-60 flex items-center justify-center border border-white border-opacity-30 backdrop-blur-md">
+                        <i class="fa-solid fa-beer-mug-empty text-3xl text-orange-400"></i>
+                    </div>
+                    <span class="font-clash font-bold text-lg drop-shadow-[0_2px_4px_rgba(0,0,0,1)]">Barleo</span>
+                </button>
+
+                <button class="btn-3d min-w-[160px] h-[160px] flex-shrink-0 flex flex-col items-center justify-center gap-3" onclick="triggerAction(this, 'scopando')" style="background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.8)), url('img/bg-scopando.jpeg'); background-size: cover; background-position: center;">
+                    <div class="w-16 h-16 rounded-full bg-black bg-opacity-60 flex items-center justify-center border border-white border-opacity-30 backdrop-blur-md">
+                        <i class="fa-solid fa-fire text-3xl text-blue-400"></i>
+                    </div>
+                    <span class="font-clash font-bold text-lg drop-shadow-[0_2px_4px_rgba(0,0,0,1)]">Sto scopando.</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- SEZIONE: LA ROULETTE -->
+        <section class="flex flex-col gap-4">
+            <h2 class="text-xl font-clash font-extrabold text-white px-2 drop-shadow-md">La Roulette</h2>
+
+            <div class="glass-card p-6 flex flex-col items-center text-center gap-6" style="background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.85)), url('img/bg-roulette.jpeg'); background-size: cover; background-position: center;">
+                <p class="text-sm font-semibold text-gray-300 drop-shadow-md">Devi prendere una decisione scomoda per il gruppo? Lascia fare al caso.</p>
+
+                <div class="glass-input w-full py-6 rounded-2xl flex items-center justify-center shadow-inner">
+                    <span id="roulette-result" class="text-4xl font-clash font-extrabold text-white tracking-wide uppercase drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">CHI TOCCA?</span>
+                </div>
+
+                <button onclick="startRoulette()" class="w-full py-4 rounded-xl font-bold text-white tracking-widest uppercase bg-gradient-to-r from-purple-700 to-pink-700 border border-white border-opacity-20 shadow-[0_8px_20px_rgba(0,0,0,0.5)] active:scale-95 transition-transform flex justify-center items-center gap-2">
+                    <i class="fa-solid fa-dice"></i> Tira a Sorte
+                </button>
+            </div>
+        </section>
+
+        <!-- SEZIONE: SFIDE (ancora dati di esempio) -->
+        <section class="flex flex-col gap-4 mb-8">
+            <h2 class="text-xl font-clash font-extrabold text-white px-2 drop-shadow-md">Monitoraggio Sfide</h2>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass-card p-4 flex flex-col gap-3 bg-opacity-80">
+                    <div class="flex justify-between items-start">
+                        <h3 class="font-clash font-bold text-lg text-white">Buzzo</h3>
+                        <span class="text-[10px] font-bold bg-orange-900 bg-opacity-60 border border-orange-500 text-orange-300 px-2 py-1 rounded-md">365 GG</span>
+                    </div>
+                    <p class="text-xs font-semibold text-gray-300 leading-tight">Obiettivo: Over 25</p>
+                    <div class="w-full bg-black bg-opacity-50 rounded-full h-2.5 mt-auto shadow-inner border border-white border-opacity-10">
+                        <div class="bg-gradient-to-r from-orange-500 to-red-600 h-2.5 rounded-full" style="width: 15%"></div>
+                    </div>
+                </div>
+
+                <div class="glass-card p-4 flex flex-col gap-3 bg-opacity-80">
+                    <div class="flex justify-between items-start">
+                        <h3 class="font-clash font-bold text-lg text-white">Lori</h3>
+                        <span class="text-[10px] font-bold bg-blue-900 bg-opacity-60 border border-blue-500 text-blue-300 px-2 py-1 rounded-md">90 GG</span>
+                    </div>
+                    <p class="text-xs font-semibold text-gray-300 leading-tight">Obiettivo: Trovare ragazza</p>
+                    <div class="w-full bg-black bg-opacity-50 rounded-full h-2.5 mt-auto shadow-inner border border-white border-opacity-10">
+                        <div class="bg-gradient-to-r from-cyan-500 to-blue-600 h-2.5 rounded-full" style="width: 35%"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="js/config.js"></script>
+    <script src="js/session.js"></script>
+    <script src="js/realtime.js"></script>
+    <script src="js/actions.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

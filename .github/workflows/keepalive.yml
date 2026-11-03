@@ -1,0 +1,17 @@
+# Supabase Free mette in pausa il progetto dopo 7 giorni senza uso.
+# Questa piccola lettura ogni 3 giorni lo tiene sveglio.
+name: Tieni sveglio Supabase
+
+on:
+  schedule:
+    - cron: '0 6 */3 * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Leggi una riga dal database
+        run: |
+          curl -sf "https://qkitqircjvavwuybozty.supabase.co/rest/v1/actions?select=id&limit=1" \
+            -H "apikey: sb_publishable_oXLRqqlztAVDYNHngpHAUQ__BL3Fj_a"
