@@ -1,5 +1,5 @@
 // Avvio dell'app. Ogni sezione ha il suo file:
-// actions.js (Azioni Rapide + bacheca), fanta.js, roulette.js, sfide.js.
+// actions.js (Azioni Rapide + bacheca), fanta.js, roulette.js, sfide.js, serate.js (archivio).
 
 let me = null;
 
@@ -25,4 +25,5 @@ document.addEventListener('DOMContentLoaded', () => {
   initFanta();
   initRoulette();
   initSfide();
+  initSerate();
 });

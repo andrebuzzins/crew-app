@@ -137,6 +137,25 @@
 
     <main class="flex flex-col gap-10 px-6 relative z-10 mt-6">
 
+        <!-- SERATA: aperta (tutto finisce in archivio) o da aprire -->
+        <section>
+            <div id="serata-open" class="hidden glass-card p-4 flex items-center gap-3 border-green-500 border-opacity-60" style="background: rgba(10, 40, 25, 0.6);">
+                <i class="fa-solid fa-moon text-2xl text-green-400"></i>
+                <div class="flex-1 min-w-0">
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-green-400">Serata in corso</p>
+                    <h3 id="serata-title" class="font-clash font-bold text-lg text-white truncate"></h3>
+                    <p id="serata-info" class="text-[11px] text-gray-300 leading-tight"></p>
+                </div>
+                <button onclick="chiudiSerata()" class="px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-red-600 bg-opacity-80 border border-red-400 active:scale-95 transition-transform">Chiudi</button>
+            </div>
+            <div id="serata-closed" class="glass-card p-4 flex gap-2">
+                <input id="serata-name" type="text" placeholder="Nome serata (es. Sabato da Leo)" class="glass-input flex-1 min-w-0 rounded-xl px-4 py-2 text-sm font-semibold">
+                <button onclick="apriSerata()" class="px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-gradient-to-r from-green-600 to-emerald-700 border border-white border-opacity-20 active:scale-95 transition-transform whitespace-nowrap">
+                    <i class="fa-solid fa-moon"></i> Apri serata
+                </button>
+            </div>
+        </section>
+
         <!-- SEZIONE: BACHECA ULTIME 6 ORE -->
         <section class="flex flex-col gap-4">
             <div class="flex items-center justify-between px-2">
@@ -300,6 +319,15 @@
             <div id="sfide-list" class="grid grid-cols-2 gap-4"></div>
         </section>
 
+        <!-- SEZIONE: ARCHIVIO SERATE -->
+        <section class="flex flex-col gap-4 mb-8">
+            <div class="flex items-center justify-between px-2">
+                <h2 class="text-xl font-clash font-extrabold text-white drop-shadow-md">Archivio</h2>
+                <i class="fa-solid fa-box-archive text-gray-400"></i>
+            </div>
+            <div id="archivio-list" class="flex flex-col gap-3"></div>
+        </section>
+
     </main>
 
     <script src="js/config.js"></script>
@@ -309,6 +337,7 @@
     <script src="js/fanta.js"></script>
     <script src="js/roulette.js"></script>
     <script src="js/sfide.js"></script>
+    <script src="js/serate.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
