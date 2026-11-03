@@ -26,4 +26,5 @@ document.addEventListener('DOMContentLoaded', () => {
   initRoulette();
   initSfide();
   initSerate();
+  initRadar();
 });

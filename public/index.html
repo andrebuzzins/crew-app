@@ -211,51 +211,22 @@
             </div>
         </section>
 
-        <!-- SEZIONE: RADAR IG (contenuto di esempio, da ridefinire) -->
+        <!-- SEZIONE: RADAR IG (persone con nome scelto a mano + commenti) -->
         <section class="flex flex-col gap-4">
             <div class="flex items-center justify-between px-2">
                 <h2 class="text-xl font-clash font-extrabold text-white drop-shadow-md">Radar IG</h2>
-                <button class="w-8 h-8 rounded-full bg-white bg-opacity-10 border border-white border-opacity-20 flex items-center justify-center text-blue-400 active:scale-90 transition-transform">
+                <button onclick="toggleRadarForm()" class="w-8 h-8 rounded-full bg-white bg-opacity-10 border border-white border-opacity-20 flex items-center justify-center text-blue-400 active:scale-90 transition-transform">
                     <i class="fa-solid fa-plus"></i>
                 </button>
             </div>
 
-            <div class="glass-card p-5 flex flex-col gap-5 relative overflow-hidden" style="background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('img/bg-radar.jpeg'); background-size: cover; background-position: center;">
-                <div class="flex items-center gap-4">
-                    <div class="relative">
-                        <img src="https://i.pravatar.cc/150?u=eddie_target" class="w-16 h-16 rounded-full border-2 border-gray-400 shadow-md">
-                        <div class="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-gray-900 rounded-full"></div>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-xl tracking-tight text-white drop-shadow-md">@eddie_troll</h3>
-                        <span class="text-xs font-semibold px-2 py-1 bg-black bg-opacity-60 border border-white border-opacity-20 rounded-md text-blue-400">OSSERVATO SPECIALE</span>
-                    </div>
-                </div>
-
-                <div class="flex flex-col gap-3 max-h-48 overflow-y-auto pr-2">
-                    <div class="flex gap-3 items-start">
-                         <img src="img/lori.jpeg" class="w-8 h-8 rounded-full object-cover shadow-sm border border-gray-600">
-                         <div class="glass-input px-3 py-2 rounded-2xl rounded-tl-none w-full">
-                             <span class="text-[10px] font-bold text-blue-400 uppercase drop-shadow-sm">Lori</span>
-                             <p class="text-sm text-gray-200 font-medium">L'ho visto in centro con una tipa. Investigare.</p>
-                         </div>
-                    </div>
-                    <div class="flex gap-3 items-start flex-row-reverse text-right">
-                         <img src="img/buzzo.jpeg" class="w-8 h-8 rounded-full object-cover shadow-sm border border-gray-600">
-                         <div class="glass-input px-3 py-2 rounded-2xl rounded-tr-none w-full">
-                             <span class="text-[10px] font-bold text-orange-400 uppercase drop-shadow-sm">Buzzo</span>
-                             <p class="text-sm text-gray-200 font-medium">Confermo, ha rimosso l'ultima storia. C'è puzza di bruciato.</p>
-                         </div>
-                    </div>
-                </div>
-
-                <div class="flex gap-2 mt-2">
-                    <input type="text" placeholder="Aggiungi una nota..." class="glass-input flex-1 rounded-xl px-4 py-2 text-sm font-semibold">
-                    <button class="w-10 h-10 rounded-xl bg-blue-600 bg-opacity-80 border border-blue-400 text-white shadow-lg active:scale-95 transition-transform flex justify-center items-center">
-                        <i class="fa-solid fa-paper-plane text-sm"></i>
-                    </button>
-                </div>
+            <!-- Form nuova persona -->
+            <div id="radar-form" class="hidden glass-card p-4 flex gap-2">
+                <input id="radar-name" type="text" maxlength="60" placeholder="Nome (es. @nome o soprannome)" onkeydown="if(event.key==='Enter') aggiungiRadar()" class="glass-input flex-1 min-w-0 rounded-xl px-4 py-2 text-sm font-semibold">
+                <button onclick="aggiungiRadar()" class="px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-blue-600 bg-opacity-80 border border-blue-400 active:scale-95 transition-transform">Aggiungi</button>
             </div>
+
+            <div id="radar-list" class="flex flex-col gap-4"></div>
         </section>
 
         <!-- SEZIONE: AZIONI RAPIDE -->
@@ -338,6 +309,7 @@
     <script src="js/roulette.js"></script>
     <script src="js/sfide.js"></script>
     <script src="js/serate.js"></script>
+    <script src="js/radar.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
