@@ -4,3 +4,4 @@ app amici.html
 SPEC_CREW_APP.md
 .claude/
 node_modules/
+*.txt
