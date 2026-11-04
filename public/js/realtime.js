@@ -36,21 +36,18 @@ async function startPresence(member) {
     });
 }
 
-// Mostra le facce di chi è online sotto il titolo.
+// "La redazione" in testata: una polaroid per membro, a colori chi è online.
+const POLAROID_TILT = [-4, 3, -2, 4, -3, 2, -1];
 function renderOnline(ids) {
   const box = document.getElementById('online-list');
-  box.innerHTML = '';
-  window.CREW_MEMBERS.forEach(m => {
+  box.innerHTML = window.CREW_MEMBERS.map((m, i) => {
     const on = ids.includes(m.id);
-    const img = document.createElement('img');
-    img.src = m.avatar;
-    img.alt = m.name;
-    img.style.objectPosition = m.pos || '';
-    img.title = m.name + (on ? ' (online)' : ' (offline)');
-    img.className = 'w-7 h-7 rounded-full object-cover border-2 transition-all ' +
-      (on ? 'border-green-400 opacity-100' : 'border-gray-700 opacity-30 grayscale');
-    box.appendChild(img);
-  });
-  const count = document.getElementById('online-count');
-  count.innerText = ids.length + ' online';
+    return `
+      <div class="polaroid ${on ? '' : 'off'}" style="--r:${POLAROID_TILT[i % POLAROID_TILT.length]}deg" title="${m.name}${on ? ' · online' : ''}">
+        <img src="${m.avatar}" alt="${m.name}" style="${avatarPos(m)}">
+        <span>${m.name}</span>
+        ${on ? '<i class="on-dot"></i>' : ''}
+      </div>`;
+  }).join('');
+  document.getElementById('online-count').innerText = ids.length + ' online';
 }

@@ -2,356 +2,530 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#050505">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#EEE8DC">
     <meta http-equiv="Cache-Control" content="no-cache">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Crew App</title>
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>CREW</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <!-- Font: Anton (titoli da tabloid), Inter (testo), Libre Baskerville (articoli), Caveat (scritte a mano) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Caveat:wght@700&family=Inter:wght@400;600;800;900&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 
     <style>
+        /* =========================================================
+           CREW — stile "tabloid": carta, inchiostro, rosso e giallo.
+           ========================================================= */
         :root {
-            --color-bg-1: #050505;
+            --paper: #EEE8DC;
+            --paper-2: #F8F4EC;
+            --ink: #111111;
+            --hot: #FF3B2F;   /* rosso tabloid */
+            --acid: #FFE600;  /* giallo evidenziatore */
+            --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .10 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
         }
 
+        html { background: var(--paper); }
         body {
             font-family: 'Inter', sans-serif;
-            color: #f3f4f6;
-            background-color: var(--color-bg-1);
+            color: var(--ink);
+            background-color: var(--paper);
+            background-image: var(--noise);
             -webkit-tap-highlight-color: transparent;
-            background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('img/bg-main.jpeg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
             min-height: 100vh;
             overflow-x: hidden;
         }
 
-        h1, h2, h3, .font-clash {
-            font-family: 'Space Grotesk', sans-serif;
+        h1, h2, h3, .font-clash, .headline {
+            font-family: 'Anton', 'Impact', sans-serif;
+            font-weight: 400;
+            letter-spacing: .01em;
+            text-transform: uppercase;
         }
+        .font-serif { font-family: 'Libre Baskerville', Georgia, serif; }
+        .hand { font-family: 'Caveat', cursive; }
+        .kicker {
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            font-size: 10.5px;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+        }
+        .text-hot { color: var(--hot); }
+        .text-acid { color: var(--acid); }
+        .hl { background: linear-gradient(transparent 55%, var(--acid) 55%); padding: 0 .1em; }
 
-        /* --- STILE GLASSMORPHISM DARK --- */
-        .glass-card {
-            background: rgba(20, 20, 25, 0.6);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            border-radius: 28px;
-        }
+        /* Angoli più "stampati" anche nei pezzi generati dal codice */
+        .rounded-2xl { border-radius: 10px !important; }
+        .rounded-xl  { border-radius: 8px !important; }
 
-        .glass-input {
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
+        /* ---------- TESTATA ---------- */
+        .masthead {
+            font-size: 92px;
+            line-height: .82;
+            letter-spacing: -.01em;
         }
-        .glass-input::placeholder { color: #9ca3af; }
-        .glass-input:focus {
-            outline: none;
-            background: rgba(0, 0, 0, 0.7);
-            box-shadow: 0 0 0 3px rgba(161, 196, 253, 0.3);
-        }
+        .double-rule { border-top: 3px solid var(--ink); border-bottom: 1px solid var(--ink); height: 6px; }
+        .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 99px; background: #16c35b; box-shadow: 0 0 0 0 rgba(22,195,91,.6); animation: pulse 1.8s infinite; vertical-align: 1px; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(22,195,91,.6); } 70% { box-shadow: 0 0 0 8px rgba(22,195,91,0); } 100% { box-shadow: 0 0 0 0 rgba(22,195,91,0); } }
 
-        /* --- BOTTONI 3D --- */
-        .btn-3d {
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 24px;
-            box-shadow: 0 10px 0 rgba(0, 0, 0, 0.9), 0 15px 20px rgba(0,0,0,0.5);
-            transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+        /* Polaroid della redazione (foto profilo) */
+        .polaroid {
             position: relative;
-            cursor: pointer;
-            color: white;
-            text-shadow: 0 2px 6px rgba(0,0,0,0.9);
+            background: #fff;
+            padding: 4px 4px 0;
+            box-shadow: 2px 3px 0 rgba(17,17,17,.18), 0 1px 0 rgba(17,17,17,.1);
+            transform: rotate(var(--r, 0deg));
+            transition: transform .2s ease;
+            flex: 1;
+            max-width: 72px;
+        }
+        .polaroid img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+        .polaroid span { display: block; text-align: center; font-family: 'Caveat', cursive; font-size: 17px; line-height: 1.25; color: var(--ink); padding: 1px 0 2px; }
+        .polaroid.off img { filter: grayscale(1) contrast(1.1); opacity: .55; }
+        .polaroid.off span { opacity: .45; }
+        .polaroid .on-dot { position: absolute; top: -4px; right: -4px; width: 12px; height: 12px; border-radius: 99px; background: #16c35b; border: 2px solid var(--paper); }
+        .polaroid::before { /* nastro adesivo */
+            content: ""; position: absolute; top: -7px; left: 50%; width: 30px; height: 11px; transform: translateX(-50%) rotate(-3deg);
+            background: rgba(255, 230, 0, .55); box-shadow: 0 1px 0 rgba(0,0,0,.05);
         }
 
-        .btn-3d:active {
-            transform: translateY(10px);
-            box-shadow: 0 0 0 rgba(0, 0, 0, 0.9), 0 5px 10px rgba(0,0,0,0.5);
-        }
+        /* ---------- ULTIM'ORA ---------- */
+        .ticker { display: flex; align-items: stretch; background: var(--ink); color: #fff; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); overflow: hidden; }
+        .ticker-label { background: var(--hot); padding: 7px 10px; font-family: 'Anton', sans-serif; letter-spacing: .04em; font-size: 15px; white-space: nowrap; flex-shrink: 0; }
+        .ticker-track { overflow: hidden; flex: 1; display: flex; align-items: center; }
+        .ticker-move { white-space: nowrap; font-weight: 800; font-size: 13px; padding-left: 100%; animation: ticker var(--dur, 30s) linear infinite; }
+        @keyframes ticker { to { transform: translateX(-100%); } }
 
-        /* Bottoni Score Fanta Figa */
+        /* ---------- TITOLI DI SEZIONE ---------- */
+        .sec-title { display: flex; align-items: baseline; gap: 10px; border-bottom: 2px solid var(--ink); padding-bottom: 6px; }
+        .sec-title .num { font-family: 'Anton', sans-serif; color: var(--hot); font-size: 15px; }
+        .sec-title h2 { font-size: 34px; line-height: .95; }
+        .tab-hero h2 { font-size: 64px; line-height: .85; }
+
+        /* ---------- BLOCCHI D'INCHIOSTRO (le vecchie "glass-card") ---------- */
+        .glass-card {
+            background: #141414;
+            background-image: var(--noise);
+            color: #f2f2f2;
+            border: 2px solid var(--ink);
+            border-radius: 12px;
+            box-shadow: 5px 5px 0 rgba(17,17,17,.22);
+        }
+        .glass-input {
+            background: #0b0b0b;
+            border: 2px solid #2c2c2c;
+            color: #fff;
+            transition: border-color .15s ease;
+        }
+        .glass-input::placeholder { color: #8b8b8b; }
+        .glass-input:focus { outline: none; border-color: var(--acid); }
+        select.glass-input { appearance: none; background-image: linear-gradient(45deg, transparent 50%, #fff 50%), linear-gradient(135deg, #fff 50%, transparent 50%); background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%; background-size: 5px 5px; background-repeat: no-repeat; }
+
+        /* Copertina con foto a retino (bianco e nero + rosso) */
+        .cover { position: relative; overflow: hidden; background: #111; min-height: 128px; display: flex; }
+        .cover::before {
+            content: ""; position: absolute; inset: 0;
+            background-image: var(--img); background-size: cover; background-position: var(--pos, center);
+            filter: grayscale(1) contrast(1.35) brightness(.95);
+        }
+        .cover::after {
+            content: ""; position: absolute; inset: 0; mix-blend-mode: multiply;
+            background:
+                radial-gradient(rgba(0,0,0,.45) 1px, transparent 1.5px) 0 0 / 4px 4px,
+                linear-gradient(to top, rgba(17,17,17,1) 0%, rgba(17,17,17,.25) 55%, rgba(255,59,47,.55) 100%);
+        }
+        .cover > * { position: relative; z-index: 1; }
+
+        /* Pulsanti */
+        .btn-ink {
+            font-family: 'Anton', sans-serif; text-transform: uppercase; letter-spacing: .05em; font-size: 17px;
+            background: var(--ink); color: #fff; border: 2px solid var(--ink); border-radius: 8px;
+            box-shadow: 4px 4px 0 var(--hot); transition: transform .08s ease, box-shadow .08s ease;
+        }
+        .btn-ink:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--hot); }
+        .btn-hot { background: var(--hot); border-color: var(--ink); box-shadow: 4px 4px 0 #000; }
+        .btn-hot:active { box-shadow: 1px 1px 0 #000; }
+        .btn-acid { background: var(--acid); color: var(--ink); border-color: var(--ink); box-shadow: 4px 4px 0 #000; }
+        .btn-acid:active { box-shadow: 1px 1px 0 #000; }
+        .btn-round {
+            width: 36px; height: 36px; border-radius: 99px; display: flex; align-items: center; justify-content: center;
+            background: var(--ink); color: var(--acid); border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--hot);
+        }
+        .btn-round:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--hot); }
+
+        /* Bottoni grandi con foto (azioni rapide, "chi sei?") */
+        .btn-3d {
+            position: relative; cursor: pointer; color: #fff;
+            border: 3px solid var(--ink); border-radius: 14px;
+            box-shadow: 6px 6px 0 var(--ink);
+            text-shadow: 0 2px 8px rgba(0,0,0,.9);
+            transition: transform .08s ease, box-shadow .08s ease;
+            overflow: hidden;
+        }
+        .btn-3d:active { transform: translate(4px, 4px); box-shadow: 2px 2px 0 var(--ink); }
+
+        /* Bottoni piccoli (+ / - voti, conteggi) */
         .btn-score {
-            background: rgba(40, 40, 40, 0.9);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
-            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.9), 0 10px 15px rgba(0,0,0,0.5);
-            transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: #222; color: #fff; border: 2px solid #000;
+            box-shadow: 3px 3px 0 #000; transition: transform .08s ease, box-shadow .08s ease;
+            display: flex; align-items: center; justify-content: center;
         }
-        .btn-score:active {
-            transform: translateY(6px);
-            box-shadow: 0 0 0 rgba(0, 0, 0, 0.9), 0 4px 6px rgba(0,0,0,0.3);
+        .btn-score:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #000; }
+
+        /* ---------- IL LIBRO NERO ---------- */
+        .redact { height: 15px; background: #000; transform: skewX(-8deg); box-shadow: inset 0 0 0 1px #2a2a2a; }
+        .slip {
+            position: relative; background: var(--paper-2); background-image: var(--noise); color: var(--ink);
+            padding: 16px 14px 14px; transform: rotate(-1deg); box-shadow: 3px 4px 0 rgba(0,0,0,.35);
         }
+        .slip::before { content: ""; position: absolute; top: -9px; left: 22px; width: 54px; height: 16px; background: rgba(255,230,0,.7); transform: rotate(-4deg); }
+        .article {
+            background: var(--paper-2); background-image: var(--noise); color: var(--ink);
+            border: 2px solid var(--ink); border-radius: 4px; padding: 16px; box-shadow: 5px 5px 0 var(--ink);
+        }
+        .dropcap::first-letter { font-family: 'Anton', sans-serif; float: left; font-size: 58px; line-height: .85; padding: 4px 8px 0 0; color: var(--hot); }
+        .libro-line:nth-child(even) { background: linear-gradient(transparent 62%, rgba(255,230,0,.65) 62%); }
+
+        /* ---------- BARRA DELLE SCHEDE ---------- */
+        .bottom-nav {
+            position: fixed; left: 10px; right: 10px; bottom: max(env(safe-area-inset-bottom), 10px); z-index: 80;
+            background: var(--ink); border: 2px solid var(--ink); border-radius: 16px;
+            box-shadow: 0 6px 0 rgba(17,17,17,.25); display: grid; grid-template-columns: repeat(5, 1fr);
+        }
+        .nav-btn { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 9px 0 8px; color: #8d8d8d; }
+        .nav-btn i { font-size: 18px; }
+        .nav-btn span { font-size: 9.5px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+        .nav-btn.active { color: #fff; }
+        .nav-btn.active::after { content: ""; position: absolute; top: -2px; left: 22%; right: 22%; height: 4px; background: var(--hot); border-radius: 0 0 4px 4px; }
+        .nav-btn .dot { position: absolute; top: 6px; right: 26%; width: 9px; height: 9px; border-radius: 99px; background: var(--hot); border: 2px solid var(--ink); }
+
+        /* "Chi sei?" */
+        #whoami { background: var(--ink); background-image: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1.5px), var(--noise); background-size: 5px 5px, auto; }
+        #whoami-grid > :last-child:nth-child(odd) { grid-column: span 2; }
 
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        @media (prefers-reduced-motion: reduce) { .ticker-move, .live-dot { animation: none; } }
     </style>
 </head>
-<body class="pb-20">
+<body class="pb-32">
 
     <!-- SCHERMATA "CHI SEI?" -->
-    <div id="whoami" class="hidden fixed inset-0 z-[100] flex-col justify-center px-6 bg-black bg-opacity-80 backdrop-blur-md">
-        <h1 class="text-4xl font-extrabold tracking-tight text-white text-center drop-shadow-md">Chi sei?</h1>
-        <p class="text-xs font-bold uppercase tracking-widest opacity-70 text-gray-300 text-center mt-2 mb-8">Scegli il tuo profilo</p>
+    <div id="whoami" class="hidden fixed inset-0 z-[100] flex-col justify-center px-6 overflow-y-auto py-10">
+        <p class="kicker text-[var(--hot)] text-center">Controllo tesserini stampa</p>
+        <h1 class="headline text-[84px] leading-[.85] text-[var(--paper)] text-center mt-1">Chi<br>sei?</h1>
+        <p class="hand text-2xl text-[var(--acid)] text-center mt-2 mb-7 -rotate-2">tocca la tua faccia</p>
         <div id="whoami-grid" class="grid grid-cols-2 gap-5"></div>
     </div>
 
-    <!-- Header dell'App -->
-    <header class="pt-10 pb-6 px-6 flex justify-between items-center sticky top-0 z-50 backdrop-blur-sm bg-black bg-opacity-20 border-b border-white border-opacity-10">
-        <div>
-            <h1 class="text-4xl font-extrabold tracking-tight text-white drop-shadow-md">Crew<span class="opacity-50">App</span></h1>
-            <div class="flex items-center gap-2 mt-1">
-                <p class="text-xs font-bold uppercase tracking-widest opacity-80 text-gray-300">Ecosistema Attivo</p>
-                <span id="online-count" class="text-[10px] font-bold text-green-400"></span>
-            </div>
-            <div id="online-list" class="flex gap-1 mt-2"></div>
-        </div>
-        <!-- Il mio profilo: tocca per cambiarlo -->
-        <button onclick="showWhoAmI()" class="flex flex-col items-center gap-1 flex-shrink-0" title="Cambia profilo">
-            <div class="w-12 h-12 rounded-full glass-card p-1 shadow-sm overflow-hidden">
-                <img id="my-avatar" src="img/fagio.jpeg" alt="Io" class="w-full h-full rounded-full object-cover">
-            </div>
-            <span id="my-name" class="text-[10px] font-bold uppercase tracking-widest text-gray-300"></span>
-        </button>
-    </header>
-
-    <!-- BANNER IN-APP (azioni degli altri, messaggi) -->
-    <div id="toast" class="fixed top-4 left-4 right-4 z-[90] -translate-y-40 opacity-0 transition-all duration-300 pointer-events-none">
-        <div class="glass-card flex items-center gap-3 p-3 pr-4 !rounded-2xl border-white border-opacity-30" style="background: rgba(20,20,25,0.9);">
-            <img id="toast-img" src="" class="w-10 h-10 rounded-full object-cover border border-gray-400">
-            <span id="toast-text" class="font-bold text-white"></span>
+    <!-- BANNER IN-APP -->
+    <div id="toast" class="fixed top-3 left-3 right-3 z-[90] -translate-y-40 opacity-0 transition-all duration-300 pointer-events-none" style="top: max(env(safe-area-inset-top), 12px);">
+        <div class="flex items-center gap-3 p-3 pr-4 bg-[var(--ink)] text-white border-2 border-[var(--ink)] border-l-[6px] border-l-[var(--hot)] rounded-xl shadow-[5px_5px_0_rgba(17,17,17,.3)]">
+            <img id="toast-img" src="" class="w-11 h-11 rounded-full object-cover border-2 border-white">
+            <span id="toast-text" class="font-extrabold text-[15px] leading-snug"></span>
         </div>
     </div>
 
-    <main class="flex flex-col gap-10 px-6 relative z-10 mt-6">
-
-        <!-- OGGI VI SEGNALO: messaggi per il gruppo (restano 7 giorni o per sempre) -->
-        <section class="glass-card p-4 flex flex-col gap-3">
-            <p class="text-xs font-bold uppercase tracking-widest text-yellow-400"><i class="fa-solid fa-bullhorn"></i> Oggi vi segnalo:</p>
-            <div class="flex gap-2">
-                <input id="segn-text" type="text" maxlength="500" placeholder="Scrivi qualcosa per il gruppo..." onkeydown="if(event.key==='Enter') inviaSegnalazione()" class="glass-input flex-1 min-w-0 rounded-xl px-4 py-2 text-sm font-semibold">
-                <button onclick="inviaSegnalazione()" class="w-10 h-10 rounded-xl bg-yellow-500 bg-opacity-80 border border-yellow-300 text-black shadow-lg active:scale-95 transition-transform flex justify-center items-center flex-shrink-0">
-                    <i class="fa-solid fa-paper-plane text-sm"></i>
-                </button>
+    <!-- TESTATA -->
+    <header class="px-5" style="padding-top: max(env(safe-area-inset-top), 14px);">
+        <div class="flex items-center justify-between kicker border-b-2 border-[var(--ink)] pb-2">
+            <span id="mast-date"></span>
+            <span class="flex items-center gap-1.5"><span class="live-dot"></span><span id="online-count">0 online</span></span>
+        </div>
+        <div class="flex items-end justify-between gap-3 mt-3">
+            <div class="min-w-0">
+                <h1 class="masthead">Crew<span class="text-hot">.</span></h1>
+                <p class="kicker mt-2 text-[var(--ink)]/70">Il giornale che nessuno ha chiesto · N° <span id="mast-issue"></span></p>
             </div>
-            <div id="segn-today" class="flex flex-col gap-2 max-h-56 overflow-y-auto"></div>
-        </section>
+            <!-- Il mio profilo: tocca per cambiarlo -->
+            <button onclick="showWhoAmI()" class="polaroid flex-none w-[78px] max-w-none" style="--r: 4deg" title="Cambia profilo">
+                <img id="my-avatar" src="img/fagio.jpeg" alt="Io">
+                <span id="my-name"></span>
+            </button>
+        </div>
+        <div class="double-rule mt-4"></div>
+        <p class="kicker mt-3 text-[var(--ink)]/60">La redazione · <span class="text-[var(--ink)]">a colori chi è online</span></p>
+        <div id="online-list" class="flex justify-between gap-2.5 mt-3 pb-4"></div>
+    </header>
 
-        <!-- SEZIONE: BACHECA ULTIME 6 ORE -->
-        <section class="flex flex-col gap-4">
-            <div class="flex items-center justify-between px-2">
-                <h2 class="text-xl font-clash font-extrabold text-white drop-shadow-md">Ultime 6 ore</h2>
-                <i class="fa-solid fa-clock-rotate-left text-gray-400"></i>
-            </div>
-            <div class="glass-card p-4">
-                <div id="feed-list" class="flex flex-col gap-2 max-h-72 overflow-y-auto"></div>
-            </div>
-        </section>
+    <!-- ULTIM'ORA -->
+    <div class="ticker" aria-hidden="true">
+        <div class="ticker-label">Ultim'ora</div>
+        <div class="ticker-track"><div id="ticker-text" class="ticker-move"></div></div>
+    </div>
 
-        <!-- SEZIONE: FANTA FIGA (conteggio per periodo) -->
-        <section class="flex flex-col gap-4">
-            <h2 class="text-xl font-clash font-extrabold text-white px-2 drop-shadow-md">Fanta Figa</h2>
+    <main id="main" class="px-5 pt-6 relative">
 
-            <div class="glass-card p-5 flex flex-col gap-4" style="background-image: linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.9)), url('img/bg-fanta.jpeg'); background-size: cover; background-position: center;">
-                <!-- Nuovo periodo -->
-                <div id="ff-setup" class="flex flex-col gap-3">
-                    <p class="text-sm font-semibold text-gray-300">Decidete il periodo: ognuno registra le sue imprese e alla fine vince chi ne ha di più.</p>
-                    <input id="ff-name" type="text" maxlength="60" placeholder="Nome (es. Fanta Figa Novembre)" class="glass-input rounded-xl px-4 py-3 font-semibold w-full">
-                    <div class="grid grid-cols-2 gap-3">
-                        <label class="flex flex-col gap-1 text-[11px] font-bold uppercase tracking-widest text-gray-400">Dal
-                            <input id="ff-from" type="date" class="glass-input rounded-xl px-3 py-3 font-semibold w-full [color-scheme:dark]">
-                        </label>
-                        <label class="flex flex-col gap-1 text-[11px] font-bold uppercase tracking-widest text-gray-400">Al
-                            <input id="ff-to" type="date" class="glass-input rounded-xl px-3 py-3 font-semibold w-full [color-scheme:dark]">
-                        </label>
+        <!-- ================= SCHEDA: OGGI ================= -->
+        <div data-tab="oggi" class="flex-col gap-9">
+            <section class="flex flex-col gap-4">
+                <div class="sec-title"><span class="num">01</span><h2>Oggi vi segnalo</h2></div>
+                <div class="glass-card p-4 flex flex-col gap-3">
+                    <p class="kicker text-[var(--acid)]"><i class="fa-solid fa-bullhorn"></i> Una notizia per tutta la redazione</p>
+                    <div class="flex gap-2">
+                        <input id="segn-text" type="text" maxlength="500" placeholder="Scrivi qualcosa per il gruppo..." onkeydown="if(event.key==='Enter') inviaSegnalazione()" class="glass-input flex-1 min-w-0 rounded-xl px-4 py-3 text-base font-semibold">
+                        <button onclick="inviaSegnalazione()" class="btn-ink btn-acid w-12 h-12 flex-shrink-0 flex items-center justify-center" aria-label="Invia">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
                     </div>
-                    <button onclick="creaPeriodoFF()" class="w-full py-3 rounded-xl font-bold text-white tracking-widest uppercase bg-gradient-to-r from-pink-600 to-red-700 border border-white border-opacity-20 shadow-lg active:scale-95 transition-transform">
-                        Inizia il Fanta Figa
+                    <div id="segn-today" class="flex flex-col gap-2 max-h-64 overflow-y-auto"></div>
+                </div>
+            </section>
+
+            <section class="flex flex-col gap-4">
+                <div class="sec-title"><span class="num">02</span><h2>Azioni rapide</h2></div>
+                <div class="grid grid-cols-2 gap-4 pr-1.5 pb-1.5">
+                    <button class="btn-3d h-[168px] flex flex-col items-start justify-end p-3 gap-1 text-left" onclick="triggerAction(this, 'barleo')" style="background-image: linear-gradient(to top, rgba(0,0,0,.9), rgba(0,0,0,.05) 70%), url('img/bg-barleo.jpeg'); background-size: cover; background-position: center;">
+                        <i class="fa-solid fa-beer-mug-empty text-3xl text-[var(--acid)] transition-transform"></i>
+                        <span class="headline text-3xl leading-none">Barleo</span>
+                    </button>
+                    <button class="btn-3d h-[168px] flex flex-col items-start justify-end p-3 gap-1 text-left" onclick="triggerAction(this, 'scopando')" style="background-image: linear-gradient(to top, rgba(0,0,0,.9), rgba(0,0,0,.05) 70%), url('img/bg-scopando.jpeg'); background-size: cover; background-position: center;">
+                        <i class="fa-solid fa-fire text-3xl text-[var(--hot)] transition-transform"></i>
+                        <span class="headline text-3xl leading-none">Sto scopando.</span>
                     </button>
                 </div>
+                <p class="kicker text-[var(--ink)]/50 -mt-1">Arriva a tutti con la tua foto · una volta ogni 5 minuti</p>
+            </section>
 
-                <!-- Periodo in corso / concluso -->
-                <div id="ff-main" class="hidden flex flex-col gap-4">
-                    <div class="text-center">
-                        <h3 id="ff-title" class="font-clash font-extrabold text-2xl text-pink-400 drop-shadow-md"></h3>
-                        <p id="ff-status" class="text-xs font-bold uppercase tracking-widest text-gray-300 mt-1"></p>
-                    </div>
-                    <div id="ff-table" class="flex flex-col gap-2"></div>
+            <section class="flex flex-col gap-4">
+                <div class="sec-title"><span class="num">03</span><h2>Ultime 6 ore</h2></div>
+                <div class="glass-card p-3">
+                    <div id="feed-list" class="flex flex-col gap-2 max-h-80 overflow-y-auto"></div>
+                </div>
+            </section>
+        </div>
 
-                    <div id="ff-register" class="flex flex-col gap-3">
-                        <p class="text-xs font-bold uppercase tracking-widest text-gray-400">Registra</p>
-                        <div id="ff-kinds" class="grid grid-cols-4 gap-2"></div>
-                        <div id="ff-feedback-box" class="hidden flex flex-col gap-2">
-                            <p id="ff-feedback-label" class="text-xs font-bold text-pink-300"></p>
-                            <input id="ff-feedback" type="text" maxlength="300" placeholder="Com'è andata? (facoltativo)" onkeydown="if(event.key==='Enter') registraFF()" class="glass-input rounded-xl px-4 py-2 text-sm font-semibold w-full">
-                            <button onclick="registraFF()" class="w-full py-2 rounded-xl font-bold text-white tracking-widest uppercase bg-gradient-to-r from-pink-600 to-red-700 border border-white border-opacity-20 active:scale-95 transition-transform">Salva</button>
+        <!-- ================= SCHEDA: GIOCHI ================= -->
+        <div data-tab="giochi" class="hidden flex-col gap-9">
+            <!-- FANTA FIGA (conteggio per periodo) -->
+            <section class="flex flex-col gap-4">
+                <div class="sec-title"><span class="num">01</span><h2>Fanta Figa</h2></div>
+                <div class="glass-card overflow-hidden">
+                    <div class="cover" style="--img: url('img/bg-fanta.jpeg')">
+                        <div class="p-4 flex flex-col justify-end w-full">
+                            <p class="kicker text-[var(--acid)]">Il campionato della crew</p>
+                            <p class="headline text-[44px] leading-[.9] text-white">Chi ne fa<br>di più?</p>
                         </div>
                     </div>
+                    <div class="p-4 flex flex-col gap-4">
+                        <!-- Nuovo periodo -->
+                        <div id="ff-setup" class="flex flex-col gap-3">
+                            <p class="text-sm font-semibold text-white/75">Decidete il periodo: ognuno registra le sue imprese e alla fine vince chi ne ha di più.</p>
+                            <input id="ff-name" type="text" maxlength="60" placeholder="Nome (es. Fanta Figa Novembre)" class="glass-input rounded-xl px-4 py-3 font-semibold w-full">
+                            <div class="grid grid-cols-2 gap-3">
+                                <label class="flex flex-col gap-1 kicker text-white/50">Dal
+                                    <input id="ff-from" type="date" class="glass-input rounded-xl px-3 py-3 font-semibold w-full [color-scheme:dark] normal-case tracking-normal text-sm">
+                                </label>
+                                <label class="flex flex-col gap-1 kicker text-white/50">Al
+                                    <input id="ff-to" type="date" class="glass-input rounded-xl px-3 py-3 font-semibold w-full [color-scheme:dark] normal-case tracking-normal text-sm">
+                                </label>
+                            </div>
+                            <button onclick="creaPeriodoFF()" class="btn-ink btn-hot w-full py-3">Inizia il Fanta Figa</button>
+                        </div>
 
-                    <button id="ff-new-period" onclick="nuovoPeriodoFF()" class="hidden w-full py-3 rounded-xl font-bold text-white tracking-widest uppercase bg-gradient-to-r from-pink-600 to-red-700 border border-white border-opacity-20 shadow-lg active:scale-95 transition-transform">
-                        Nuovo periodo
-                    </button>
+                        <!-- Periodo in corso / concluso -->
+                        <div id="ff-main" class="hidden flex flex-col gap-4">
+                            <div class="text-center">
+                                <h3 id="ff-title" class="text-4xl leading-none text-[var(--hot)]"></h3>
+                                <p id="ff-status" class="kicker text-white/60 mt-2"></p>
+                            </div>
+                            <div id="ff-table" class="flex flex-col gap-2"></div>
 
-                    <div class="flex flex-col gap-2">
-                        <p class="text-xs font-bold uppercase tracking-widest text-gray-400">Storico e feedback</p>
-                        <div id="ff-log" class="flex flex-col gap-2 max-h-72 overflow-y-auto"></div>
+                            <div id="ff-register" class="flex flex-col gap-3">
+                                <p class="kicker text-white/50">Registra un'impresa</p>
+                                <div id="ff-kinds" class="grid grid-cols-4 gap-2"></div>
+                                <div id="ff-feedback-box" class="hidden flex flex-col gap-2">
+                                    <p id="ff-feedback-label" class="kicker text-[var(--acid)]"></p>
+                                    <input id="ff-feedback" type="text" maxlength="300" placeholder="Com'è andata? (facoltativo)" onkeydown="if(event.key==='Enter') registraFF()" class="glass-input rounded-xl px-4 py-3 text-base font-semibold w-full">
+                                    <button onclick="registraFF()" class="btn-ink btn-hot w-full py-2.5">Salva</button>
+                                </div>
+                            </div>
+
+                            <button id="ff-new-period" onclick="nuovoPeriodoFF()" class="hidden btn-ink btn-hot w-full py-3">Nuovo periodo</button>
+
+                            <div class="flex flex-col gap-2">
+                                <p class="kicker text-white/50">Storico e feedback</p>
+                                <div id="ff-log" class="flex flex-col gap-2 max-h-72 overflow-y-auto"></div>
+                            </div>
+                        </div>
+
+                        <!-- Classifica totale di tutti i periodi + periodi passati -->
+                        <div id="ff-history" class="flex flex-col gap-2 pt-4 border-t border-white/10 empty:hidden"></div>
                     </div>
                 </div>
+            </section>
 
-                <!-- Classifica totale di tutti i periodi + periodi passati -->
-                <div id="ff-history" class="flex flex-col gap-2 pt-4 border-t border-white border-opacity-10 empty:hidden"></div>
-            </div>
-        </section>
+            <!-- VOTO DELLA SERATA (tabelle fanta_events / fanta_votes) -->
+            <section class="flex flex-col gap-4">
+                <div class="sec-title"><span class="num">02</span><h2>Voto della serata</h2></div>
+                <div class="glass-card overflow-hidden">
+                    <div class="cover" style="--img: url('img/bg-scopando.jpeg')">
+                        <div class="p-4 flex flex-col justify-end w-full">
+                            <p class="kicker text-[var(--acid)]">Da 1 a 10, a tempo</p>
+                            <p class="headline text-[44px] leading-[.9] text-white">La giuria<br>è in seduta</p>
+                        </div>
+                    </div>
+                    <div class="p-4 flex flex-col gap-4">
+                        <div id="fanta-setup" class="flex flex-col gap-3">
+                            <input type="text" id="fanta-event-name" placeholder="Nome evento (es. Serata in centro)" class="glass-input rounded-xl px-4 py-3 font-semibold w-full">
+                            <select id="fanta-duration" class="glass-input rounded-xl px-4 py-3 font-semibold w-full">
+                                <option value="60">Durata: 1 minuto</option>
+                                <option value="300">Durata: 5 minuti</option>
+                                <option value="900">Durata: 15 minuti</option>
+                            </select>
+                            <button onclick="creaEventoFanta()" class="btn-ink btn-hot w-full py-3">Apri la votazione</button>
+                        </div>
 
-        <!-- SEZIONE: VOTO DELLA SERATA (tabelle fanta_events / fanta_votes) -->
-        <section class="flex flex-col gap-4">
-            <h2 class="text-xl font-clash font-extrabold text-white px-2 drop-shadow-md">Voto della serata</h2>
+                        <div id="fanta-grid" class="hidden flex-col gap-5">
+                            <div class="text-center relative">
+                                <h3 id="fanta-event-title" class="text-4xl leading-none text-[var(--acid)]">Serata</h3>
+                                <div class="flex items-center justify-center gap-2 mt-3">
+                                    <span class="kicker text-white/60">Tempo restante</span>
+                                    <span id="fanta-timer" class="font-clash text-xl text-white bg-[var(--hot)] border-2 border-black px-2 py-0.5 rounded-md">60s</span>
+                                </div>
+                                <p id="fanta-voters" class="kicker text-white/50 mt-2"></p>
+                            </div>
+                            <div id="fanta-players" class="flex flex-col gap-4"></div>
+                        </div>
 
-            <div class="glass-card p-5 flex flex-col gap-4" style="background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.85)), url('img/bg-fanta.jpeg'); background-size: cover; background-position: center;">
-                <div id="fanta-setup" class="flex flex-col gap-3">
-                    <input type="text" id="fanta-event-name" placeholder="Nome Evento (es. Serata in Centro)" class="glass-input rounded-xl px-4 py-3 font-semibold w-full">
-                    <select id="fanta-duration" class="glass-input rounded-xl px-4 py-3 font-semibold w-full">
-                        <option value="60">Durata: 1 minuto</option>
-                        <option value="300">Durata: 5 minuti</option>
-                        <option value="900">Durata: 15 minuti</option>
+                        <div id="fanta-results" class="hidden flex-col gap-3">
+                            <div class="text-center">
+                                <p class="kicker text-white/60">Classifica finale</p>
+                                <h3 id="fanta-results-title" class="text-4xl leading-none text-[var(--acid)]"></h3>
+                            </div>
+                            <div id="fanta-results-list" class="flex flex-col gap-3"></div>
+                            <button onclick="nuovoEventoFanta()" class="btn-ink btn-hot w-full py-3">Nuova votazione</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- LA ROULETTE -->
+            <section class="flex flex-col gap-4">
+                <div class="sec-title"><span class="num">03</span><h2>La Roulette</h2></div>
+                <div class="glass-card overflow-hidden">
+                    <div class="cover" style="--img: url('img/bg-roulette.jpeg')">
+                        <div class="p-4 flex flex-col justify-end w-full">
+                            <p class="kicker text-[var(--acid)]">Decisioni scomode</p>
+                            <p class="headline text-[44px] leading-[.9] text-white">Decide<br>il destino</p>
+                        </div>
+                    </div>
+                    <div class="p-4 flex flex-col items-center text-center gap-4">
+                        <div class="w-full py-6 rounded-xl bg-black border-2 border-[#2c2c2c] flex items-center justify-center">
+                            <span id="roulette-result" class="font-clash text-5xl text-white tracking-wide">Chi tocca?</span>
+                        </div>
+                        <p id="roulette-by" class="kicker text-white/50 -mt-1"></p>
+                        <button onclick="startRoulette()" class="btn-ink btn-acid w-full py-3.5 flex justify-center items-center gap-2">
+                            <i class="fa-solid fa-dice"></i> Tira a sorte
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ================= SCHEDA: IL LIBRO NERO ================= -->
+        <div data-tab="libro" class="hidden flex-col gap-7">
+            <section class="tab-hero">
+                <p class="kicker text-hot">Novità · storia a catena</p>
+                <h2 class="mt-1">Il Libro<br>Nero<span class="text-hot">.</span></h2>
+                <p class="font-serif text-[15px] leading-relaxed mt-3 text-[var(--ink)]/80">
+                    Una storia scritta da tutta la crew, una riga a testa. <span class="hl">Vedi solo l'ultima riga</span>: tutto il resto è censurato.
+                    Non puoi scrivere due volte di fila. Quando le righe finiscono, il capitolo esce per intero.
+                </p>
+            </section>
+
+            <!-- Capitolo in corso -->
+            <div id="libro-open" class="hidden glass-card p-4 flex flex-col gap-4"></div>
+
+            <!-- Nuovo capitolo -->
+            <div id="libro-new" class="glass-card overflow-hidden">
+                <div class="cover" style="--img: url('img/bg-main.jpeg'); --pos: center 30%">
+                    <div class="p-4 flex flex-col justify-end w-full">
+                        <p class="kicker text-[var(--acid)]">Nessun capitolo aperto</p>
+                        <p class="headline text-[44px] leading-[.9] text-white">Inizia tu<br>la storia</p>
+                    </div>
+                </div>
+                <div class="p-4 flex flex-col gap-3">
+                    <input id="libro-title" type="text" maxlength="80" placeholder="Titolo (es. La notte del Conad)" class="glass-input rounded-xl px-4 py-3 font-semibold w-full">
+                    <div class="relative">
+                        <textarea id="libro-first" maxlength="240" rows="3" placeholder="La prima riga della storia…" class="glass-input rounded-xl px-4 py-3 pr-14 text-base font-semibold w-full resize-none"></textarea>
+                        <button onclick="ispiramiLibro()" class="absolute right-2 top-2 btn-round" title="Ispirami" aria-label="Inizio a caso"><i class="fa-solid fa-dice"></i></button>
+                    </div>
+                    <select id="libro-max" class="glass-input rounded-xl px-4 py-3 font-semibold w-full">
+                        <option value="6">Capitolo corto · 6 righe</option>
+                        <option value="10" selected>Capitolo normale · 10 righe</option>
+                        <option value="15">Capitolo lungo · 15 righe</option>
                     </select>
-                    <button onclick="creaEventoFanta()" class="w-full py-3 rounded-xl font-bold text-white tracking-widest uppercase bg-gradient-to-r from-blue-600 to-indigo-700 border border-white border-opacity-20 shadow-lg active:scale-95 transition-transform">
-                        Crea Evento
-                    </button>
-                </div>
-
-                <div id="fanta-grid" class="hidden flex-col gap-5 mt-2">
-                    <div class="text-center mb-2 relative">
-                        <h3 id="fanta-event-title" class="font-clash font-extrabold text-2xl text-blue-400 drop-shadow-md">Serata</h3>
-                        <div class="flex items-center justify-center gap-2 mt-2">
-                            <span class="text-xs font-bold uppercase tracking-widest opacity-80">Tempo restante:</span>
-                            <span id="fanta-timer" class="text-sm font-black text-red-500 bg-red-900 bg-opacity-40 border border-red-500 px-2 py-1 rounded-md transition-all">60s</span>
-                        </div>
-                        <p id="fanta-voters" class="text-[11px] font-bold text-gray-400 mt-2"></p>
-                    </div>
-                    <!-- Righe dei giocatori generate da js/fanta.js -->
-                    <div id="fanta-players" class="flex flex-col gap-5"></div>
-                </div>
-
-                <!-- Classifica a fine evento -->
-                <div id="fanta-results" class="hidden flex-col gap-3">
-                    <div class="text-center">
-                        <p class="text-xs font-bold uppercase tracking-widest opacity-80">Classifica finale</p>
-                        <h3 id="fanta-results-title" class="font-clash font-extrabold text-2xl text-blue-400 drop-shadow-md"></h3>
-                    </div>
-                    <div id="fanta-results-list" class="flex flex-col gap-3"></div>
-                    <button onclick="nuovoEventoFanta()" class="w-full py-3 rounded-xl font-bold text-white tracking-widest uppercase bg-gradient-to-r from-blue-600 to-indigo-700 border border-white border-opacity-20 shadow-lg active:scale-95 transition-transform">
-                        Nuovo Evento
-                    </button>
+                    <button onclick="nuovoCapitolo()" class="btn-ink btn-hot w-full py-3">Apri il capitolo</button>
                 </div>
             </div>
-        </section>
 
-        <!-- SEZIONE: RADAR IG (persone con nome scelto a mano + commenti) -->
-        <section class="flex flex-col gap-4">
-            <div class="flex items-center justify-between px-2">
-                <h2 class="text-xl font-clash font-extrabold text-white drop-shadow-md">Radar IG</h2>
-                <button onclick="toggleRadarForm()" class="w-8 h-8 rounded-full bg-white bg-opacity-10 border border-white border-opacity-20 flex items-center justify-center text-blue-400 active:scale-90 transition-transform">
-                    <i class="fa-solid fa-plus"></i>
-                </button>
-            </div>
+            <section class="flex flex-col gap-4">
+                <div class="sec-title"><span class="num">✦</span><h2>Capitoli usciti</h2></div>
+                <div id="libro-chapters" class="flex flex-col gap-5 pr-1.5"></div>
+            </section>
+        </div>
 
-            <!-- Form nuova persona -->
-            <div id="radar-form" class="hidden glass-card p-4 flex gap-2">
-                <input id="radar-name" type="text" maxlength="60" placeholder="Nome (es. @nome o soprannome)" onkeydown="if(event.key==='Enter') aggiungiRadar()" class="glass-input flex-1 min-w-0 rounded-xl px-4 py-2 text-sm font-semibold">
-                <button onclick="aggiungiRadar()" class="px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-blue-600 bg-opacity-80 border border-blue-400 active:scale-95 transition-transform">Aggiungi</button>
-            </div>
-
-            <div id="radar-list" class="flex flex-col gap-4"></div>
-        </section>
-
-        <!-- SEZIONE: AZIONI RAPIDE -->
-        <section class="flex flex-col gap-4">
-            <h2 class="text-xl font-clash font-extrabold text-white px-2 drop-shadow-md">Azioni Rapide</h2>
-
-            <div class="flex gap-4 overflow-x-auto hide-scroll pb-6 pt-2 px-2">
-                <button class="btn-3d min-w-[160px] h-[160px] flex-shrink-0 flex flex-col items-center justify-center gap-3" onclick="triggerAction(this, 'barleo')" style="background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.8)), url('img/bg-barleo.jpeg'); background-size: cover; background-position: center;">
-                    <div class="w-16 h-16 rounded-full bg-black bg-opacity-60 flex items-center justify-center border border-white border-opacity-30 backdrop-blur-md">
-                        <i class="fa-solid fa-beer-mug-empty text-3xl text-orange-400"></i>
-                    </div>
-                    <span class="font-clash font-bold text-lg drop-shadow-[0_2px_4px_rgba(0,0,0,1)]">Barleo</span>
-                </button>
-
-                <button class="btn-3d min-w-[160px] h-[160px] flex-shrink-0 flex flex-col items-center justify-center gap-3" onclick="triggerAction(this, 'scopando')" style="background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.8)), url('img/bg-scopando.jpeg'); background-size: cover; background-position: center;">
-                    <div class="w-16 h-16 rounded-full bg-black bg-opacity-60 flex items-center justify-center border border-white border-opacity-30 backdrop-blur-md">
-                        <i class="fa-solid fa-fire text-3xl text-blue-400"></i>
-                    </div>
-                    <span class="font-clash font-bold text-lg drop-shadow-[0_2px_4px_rgba(0,0,0,1)]">Sto scopando.</span>
-                </button>
-            </div>
-        </section>
-
-        <!-- SEZIONE: LA ROULETTE -->
-        <section class="flex flex-col gap-4">
-            <h2 class="text-xl font-clash font-extrabold text-white px-2 drop-shadow-md">La Roulette</h2>
-
-            <div class="glass-card p-6 flex flex-col items-center text-center gap-6" style="background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.85)), url('img/bg-roulette.jpeg'); background-size: cover; background-position: center;">
-                <p class="text-sm font-semibold text-gray-300 drop-shadow-md">Devi prendere una decisione scomoda per il gruppo? Lascia fare al caso.</p>
-
-                <div class="glass-input w-full py-6 rounded-2xl flex items-center justify-center shadow-inner">
-                    <span id="roulette-result" class="text-4xl font-clash font-extrabold text-white tracking-wide uppercase drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">CHI TOCCA?</span>
+        <!-- ================= SCHEDA: CREW ================= -->
+        <div data-tab="crew" class="hidden flex-col gap-9">
+            <!-- SFIDE -->
+            <section class="flex flex-col gap-4">
+                <div class="sec-title justify-between">
+                    <div class="flex items-baseline gap-2.5"><span class="num">01</span><h2>Sfide</h2></div>
+                    <button onclick="toggleSfidaForm()" class="btn-round self-center" aria-label="Nuova sfida"><i class="fa-solid fa-plus"></i></button>
                 </div>
-                <p id="roulette-by" class="text-xs font-bold text-gray-400 -mt-3"></p>
-
-                <button onclick="startRoulette()" class="w-full py-4 rounded-xl font-bold text-white tracking-widest uppercase bg-gradient-to-r from-purple-700 to-pink-700 border border-white border-opacity-20 shadow-[0_8px_20px_rgba(0,0,0,0.5)] active:scale-95 transition-transform flex justify-center items-center gap-2">
-                    <i class="fa-solid fa-dice"></i> Tira a Sorte
-                </button>
-            </div>
-        </section>
-
-        <!-- SEZIONE: SFIDE -->
-        <section class="flex flex-col gap-4 mb-8">
-            <div class="flex items-center justify-between px-2">
-                <h2 class="text-xl font-clash font-extrabold text-white drop-shadow-md">Monitoraggio Sfide</h2>
-                <button onclick="toggleSfidaForm()" class="w-8 h-8 rounded-full bg-white bg-opacity-10 border border-white border-opacity-20 flex items-center justify-center text-blue-400 active:scale-90 transition-transform">
-                    <i class="fa-solid fa-plus"></i>
-                </button>
-            </div>
-
-            <!-- Form nuova sfida -->
-            <div id="sfida-form" class="hidden glass-card p-4 flex flex-col gap-3">
-                <select id="sfida-member" class="glass-input rounded-xl px-4 py-3 font-semibold w-full"></select>
-                <input id="sfida-title" type="text" placeholder="Obiettivo (es. Over 25)" class="glass-input rounded-xl px-4 py-3 font-semibold w-full">
-                <input id="sfida-days" type="number" min="1" inputmode="numeric" placeholder="Durata in giorni (es. 90)" class="glass-input rounded-xl px-4 py-3 font-semibold w-full">
-                <button onclick="creaSfida()" class="w-full py-3 rounded-xl font-bold text-white tracking-widest uppercase bg-gradient-to-r from-orange-500 to-red-600 border border-white border-opacity-20 shadow-lg active:scale-95 transition-transform">
-                    Lancia Sfida
-                </button>
-            </div>
-
-            <div id="sfide-list" class="grid grid-cols-2 gap-4"></div>
-        </section>
-
-        <!-- SEZIONE: ARCHIVIO SERATE -->
-        <section class="flex flex-col gap-4 mb-8">
-            <div class="flex items-center justify-between px-2">
-                <div>
-                    <h2 class="text-xl font-clash font-extrabold text-white drop-shadow-md">Archivio</h2>
-                    <p class="text-[11px] font-bold text-gray-400">Segnalazioni: 7 giorni, oppure per sempre col 🔒</p>
+                <div id="sfida-form" class="hidden glass-card p-4 flex flex-col gap-3">
+                    <select id="sfida-member" class="glass-input rounded-xl px-4 py-3 font-semibold w-full"></select>
+                    <input id="sfida-title" type="text" placeholder="Obiettivo (es. Over 25)" class="glass-input rounded-xl px-4 py-3 font-semibold w-full">
+                    <input id="sfida-days" type="number" min="1" inputmode="numeric" placeholder="Durata in giorni (es. 90)" class="glass-input rounded-xl px-4 py-3 font-semibold w-full">
+                    <button onclick="creaSfida()" class="btn-ink btn-hot w-full py-3">Lancia la sfida</button>
                 </div>
-                <i class="fa-solid fa-box-archive text-gray-400"></i>
+                <div id="sfide-list" class="grid grid-cols-2 gap-4"></div>
+            </section>
+
+            <!-- RADAR IG -->
+            <section class="flex flex-col gap-4">
+                <div class="sec-title justify-between">
+                    <div class="flex items-baseline gap-2.5"><span class="num">02</span><h2>Radar IG</h2></div>
+                    <button onclick="toggleRadarForm()" class="btn-round self-center" aria-label="Aggiungi persona"><i class="fa-solid fa-plus"></i></button>
+                </div>
+                <div id="radar-form" class="hidden glass-card p-4 flex gap-2">
+                    <input id="radar-name" type="text" maxlength="60" placeholder="Nome (es. @nome o soprannome)" onkeydown="if(event.key==='Enter') aggiungiRadar()" class="glass-input flex-1 min-w-0 rounded-xl px-4 py-2 text-base font-semibold">
+                    <button onclick="aggiungiRadar()" class="btn-ink btn-acid px-3 py-2 text-sm">Aggiungi</button>
+                </div>
+                <div id="radar-list" class="flex flex-col gap-4"></div>
+            </section>
+        </div>
+
+        <!-- ================= SCHEDA: ARCHIVIO ================= -->
+        <div data-tab="archivio" class="hidden flex-col gap-6">
+            <section class="tab-hero">
+                <p class="kicker text-hot">Le segnalazioni</p>
+                <h2 class="mt-1">Archivio<span class="text-hot">.</span></h2>
+                <p class="font-serif text-[15px] leading-relaxed mt-3 text-[var(--ink)]/80">Restano 7 giorni. Col <i class="fa-solid fa-lock"></i> le tenete <span class="hl">per sempre</span>.</p>
+            </section>
+            <div class="glass-card p-3">
+                <div id="archivio-list" class="flex flex-col gap-2"></div>
             </div>
-            <div id="archivio-list" class="flex flex-col gap-3"></div>
-        </section>
+        </div>
 
     </main>
+
+    <!-- BARRA DELLE SCHEDE -->
+    <nav class="bottom-nav">
+        <button class="nav-btn" data-go="oggi" onclick="showTab('oggi')"><i class="fa-solid fa-newspaper"></i><span>Oggi</span></button>
+        <button class="nav-btn" data-go="giochi" onclick="showTab('giochi')"><i class="fa-solid fa-dice"></i><span>Giochi</span></button>
+        <button class="nav-btn" data-go="libro" onclick="showTab('libro')"><i class="fa-solid fa-book-skull"></i><span>Libro</span><i id="nav-libro-dot" class="dot hidden"></i></button>
+        <button class="nav-btn" data-go="crew" onclick="showTab('crew')"><i class="fa-solid fa-people-group"></i><span>Crew</span></button>
+        <button class="nav-btn" data-go="archivio" onclick="showTab('archivio')"><i class="fa-solid fa-box-archive"></i><span>Archivio</span></button>
+    </nav>
 
     <script src="js/config.js?v=__V__"></script>
     <script src="js/session.js?v=__V__"></script>
@@ -363,6 +537,7 @@
     <script src="js/fantafiga.js?v=__V__"></script>
     <script src="js/segnalazioni.js?v=__V__"></script>
     <script src="js/radar.js?v=__V__"></script>
+    <script src="js/libro.js?v=__V__"></script>
     <script src="js/app.js?v=__V__"></script>
 </body>
 </html>

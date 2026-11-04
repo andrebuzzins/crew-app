@@ -33,11 +33,11 @@ function renderWhoAmI() {
   grid.innerHTML = '';
   window.CREW_MEMBERS.forEach(m => {
     const btn = document.createElement('button');
-    btn.className = 'btn-3d h-[150px] flex flex-col items-center justify-end p-3 gap-1';
-    btn.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.85)), url('${m.avatar}')`;
+    btn.className = 'btn-3d h-[150px] flex flex-col items-start justify-end p-3 gap-1 !border-[var(--paper)] !shadow-[6px_6px_0_var(--hot)]';
+    btn.style.backgroundImage = `linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0) 60%), url('${m.avatar}')`;
     btn.style.backgroundSize = 'cover';
     btn.style.backgroundPosition = m.pos || 'center';
-    btn.innerHTML = `<span class="font-clash font-bold text-xl">${m.name}</span>`;
+    btn.innerHTML = `<span class="headline text-3xl leading-none">${m.name}</span>`;
     btn.onclick = () => chooseMember(m.id);
     grid.appendChild(btn);
   });
