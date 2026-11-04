@@ -23,6 +23,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      # Versione nuova a ogni pubblicazione: i telefoni scaricano i file aggiornati
+      - name: Imposta versione file
+        run: sed -i "s/__V__/${GITHUB_SHA::7}/g" public/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
