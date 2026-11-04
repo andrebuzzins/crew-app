@@ -13,4 +13,5 @@ window.CREW_MEMBERS = [
   { id: 'buzzo',  name: 'Buzzo',  avatar: 'img/buzzo.jpeg', pos: '55% 30%' },
   { id: 'leo',    name: 'Leo',    avatar: 'img/leo.jpeg',   pos: '60% 50%' },
   { id: 'lori',   name: 'Lori',   avatar: 'img/lori.jpeg',  pos: '55% 25%' },
+  { id: 'porce',  name: 'Porce',  avatar: 'img/porce.jpeg', pos: '55% 45%' },
 ];

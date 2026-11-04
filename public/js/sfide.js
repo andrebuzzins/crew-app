@@ -33,6 +33,10 @@ async function initSfide() {
       if (i >= 0) sfide[i] = c; else sfide.push(c);
       renderSfide();
     })
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'challenges' }, p => {
+      sfide = sfide.filter(x => x.id !== p.old.id);
+      renderSfide();
+    })
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'challenge_updates' }, p => {
       sfideLastUpdate[p.new.challenge_id] = p.new;
       renderSfide();
@@ -73,6 +77,16 @@ async function aggiornaSfida(id, delta) {
   renderSfide();
 }
 
+async function eliminaSfida(id) {
+  const c = sfide.find(x => x.id === id);
+  const m = c && getMember(c.member_id);
+  if (!confirm(`Eliminare la sfida${m ? ' di ' + m.name : ''}${c ? ': ' + c.title : ''}?`)) return;
+  const { error } = await supa.from('challenges').delete().eq('id', id);
+  if (error) { console.error(error); return showToast('Errore, riprova', me && me.avatar); }
+  sfide = sfide.filter(x => x.id !== id);
+  renderSfide();
+}
+
 function renderSfide() {
   const box = document.getElementById('sfide-list');
   if (sfide.length === 0) {
@@ -84,6 +98,8 @@ function renderSfide() {
     const m = getMember(c.member_id) || { name: c.member_id };
     const elapsed = Math.floor((Date.now() - new Date(c.start_date + 'T00:00:00').getTime()) / 86400000);
     const left = Math.max(0, c.total_days - elapsed);
+    const day = Math.min(c.total_days, Math.max(1, elapsed + 1));          // giorno attuale della sfida
+    const timePct = Math.min(100, Math.round((day / c.total_days) * 100)); // barra dei giorni
     const u = sfideLastUpdate[c.id];
     const uBy = u && getMember(u.author_id);
     const uText = u ? `${uBy ? uBy.name : u.author_id} ${u.delta_pct > 0 ? '+' : ''}${u.delta_pct}% · ${new Date(u.created_at).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })}` : 'Nessun aggiornamento';
@@ -91,9 +107,21 @@ function renderSfide() {
       <div class="glass-card p-4 flex flex-col gap-3 bg-opacity-80">
         <div class="flex justify-between items-start gap-1">
           <h3 class="font-clash font-bold text-lg text-white">${m.name}</h3>
-          <span class="text-[10px] font-bold ${col.badge} bg-opacity-60 border px-2 py-1 rounded-md whitespace-nowrap">${left} GG</span>
+          <div class="flex items-center gap-1">
+            <span class="text-[10px] font-bold ${col.badge} bg-opacity-60 border px-2 py-1 rounded-md whitespace-nowrap">${left} GG</span>
+            <button onclick="eliminaSfida('${c.id}')" class="w-6 h-6 rounded-full text-gray-500 hover:text-red-400 flex items-center justify-center" title="Elimina sfida">
+              <i class="fa-solid fa-trash text-[11px]"></i>
+            </button>
+          </div>
         </div>
         <p class="text-xs font-semibold text-gray-300 leading-tight">Obiettivo: ${escapeHtml(c.title)}</p>
+        <!-- Barra dei giorni che scorrono -->
+        <div class="flex flex-col gap-1">
+          <div class="flex justify-between text-[10px] font-bold text-gray-400"><span><i class="fa-regular fa-calendar"></i> Giorno ${day} di ${c.total_days}</span><span>${timePct}%</span></div>
+          <div class="w-full bg-black bg-opacity-50 rounded-full h-1.5 border border-white border-opacity-10">
+            <div class="bg-gray-300 h-1.5 rounded-full transition-all" style="width: ${timePct}%"></div>
+          </div>
+        </div>
         <div class="mt-auto flex flex-col gap-1">
           <div class="flex justify-between text-[10px] font-bold text-gray-400"><span>${escapeHtml(uText)}</span><span class="text-white">${c.progress_pct}%</span></div>
           <div class="w-full bg-black bg-opacity-50 rounded-full h-2.5 shadow-inner border border-white border-opacity-10">

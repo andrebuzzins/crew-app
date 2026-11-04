@@ -1,4 +1,4 @@
-// Fanta Figa condiviso.
+// "Voto della serata" (tabelle fanta_events / fanta_votes, il vecchio Fanta Figa).
 // Regole: ognuno vota gli altri (non se stesso) da 1 a 10. Il timer è calcolato da
 // ends_at salvato nel database, quindi è uguale su tutti i telefoni. A tempo scaduto
 // il database rifiuta i voti e si vede la classifica con la media.
@@ -30,7 +30,7 @@ async function initFanta() {
       setFantaEvent(p.new, []);
       const by = getMember(p.new.created_by);
       if (!me || p.new.created_by !== me.id) {
-        showToast(`${by ? by.name : 'Qualcuno'} ha aperto il Fanta Figa: ${p.new.name}`, by && by.avatar);
+        showToast(`${by ? by.name : 'Qualcuno'} ha aperto il Voto della serata: ${p.new.name}`, by && by.avatar, by && by.pos);
       }
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'fanta_votes' }, p => {

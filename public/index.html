@@ -137,23 +137,16 @@
 
     <main class="flex flex-col gap-10 px-6 relative z-10 mt-6">
 
-        <!-- SERATA: aperta (tutto finisce in archivio) o da aprire -->
-        <section>
-            <div id="serata-open" class="hidden glass-card p-4 flex items-center gap-3 border-green-500 border-opacity-60" style="background: rgba(10, 40, 25, 0.6);">
-                <i class="fa-solid fa-moon text-2xl text-green-400"></i>
-                <div class="flex-1 min-w-0">
-                    <p class="text-[10px] font-bold uppercase tracking-widest text-green-400">Serata in corso</p>
-                    <h3 id="serata-title" class="font-clash font-bold text-lg text-white truncate"></h3>
-                    <p id="serata-info" class="text-[11px] text-gray-300 leading-tight"></p>
-                </div>
-                <button onclick="chiudiSerata()" class="px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-red-600 bg-opacity-80 border border-red-400 active:scale-95 transition-transform">Chiudi</button>
-            </div>
-            <div id="serata-closed" class="glass-card p-4 flex gap-2">
-                <input id="serata-name" type="text" placeholder="Nome serata (es. Sabato da Leo)" class="glass-input flex-1 min-w-0 rounded-xl px-4 py-2 text-sm font-semibold">
-                <button onclick="apriSerata()" class="px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-gradient-to-r from-green-600 to-emerald-700 border border-white border-opacity-20 active:scale-95 transition-transform whitespace-nowrap">
-                    <i class="fa-solid fa-moon"></i> Apri serata
+        <!-- OGGI VI SEGNALO: messaggi per il gruppo (restano 7 giorni o per sempre) -->
+        <section class="glass-card p-4 flex flex-col gap-3">
+            <p class="text-xs font-bold uppercase tracking-widest text-yellow-400"><i class="fa-solid fa-bullhorn"></i> Oggi vi segnalo:</p>
+            <div class="flex gap-2">
+                <input id="segn-text" type="text" maxlength="500" placeholder="Scrivi qualcosa per il gruppo..." onkeydown="if(event.key==='Enter') inviaSegnalazione()" class="glass-input flex-1 min-w-0 rounded-xl px-4 py-2 text-sm font-semibold">
+                <button onclick="inviaSegnalazione()" class="w-10 h-10 rounded-xl bg-yellow-500 bg-opacity-80 border border-yellow-300 text-black shadow-lg active:scale-95 transition-transform flex justify-center items-center flex-shrink-0">
+                    <i class="fa-solid fa-paper-plane text-sm"></i>
                 </button>
             </div>
+            <div id="segn-today" class="flex flex-col gap-2 max-h-56 overflow-y-auto"></div>
         </section>
 
         <!-- SEZIONE: BACHECA ULTIME 6 ORE -->
@@ -167,9 +160,61 @@
             </div>
         </section>
 
-        <!-- SEZIONE: FANTA FIGA -->
+        <!-- SEZIONE: FANTA FIGA (conteggio per periodo) -->
         <section class="flex flex-col gap-4">
             <h2 class="text-xl font-clash font-extrabold text-white px-2 drop-shadow-md">Fanta Figa</h2>
+
+            <div class="glass-card p-5 flex flex-col gap-4" style="background-image: linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.9)), url('img/bg-fanta.jpeg'); background-size: cover; background-position: center;">
+                <!-- Nuovo periodo -->
+                <div id="ff-setup" class="flex flex-col gap-3">
+                    <p class="text-sm font-semibold text-gray-300">Decidete il periodo: ognuno registra le sue imprese e alla fine vince chi ne ha di più.</p>
+                    <input id="ff-name" type="text" maxlength="60" placeholder="Nome (es. Fanta Figa Novembre)" class="glass-input rounded-xl px-4 py-3 font-semibold w-full">
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="flex flex-col gap-1 text-[11px] font-bold uppercase tracking-widest text-gray-400">Dal
+                            <input id="ff-from" type="date" class="glass-input rounded-xl px-3 py-3 font-semibold w-full [color-scheme:dark]">
+                        </label>
+                        <label class="flex flex-col gap-1 text-[11px] font-bold uppercase tracking-widest text-gray-400">Al
+                            <input id="ff-to" type="date" class="glass-input rounded-xl px-3 py-3 font-semibold w-full [color-scheme:dark]">
+                        </label>
+                    </div>
+                    <button onclick="creaPeriodoFF()" class="w-full py-3 rounded-xl font-bold text-white tracking-widest uppercase bg-gradient-to-r from-pink-600 to-red-700 border border-white border-opacity-20 shadow-lg active:scale-95 transition-transform">
+                        Inizia il Fanta Figa
+                    </button>
+                </div>
+
+                <!-- Periodo in corso / concluso -->
+                <div id="ff-main" class="hidden flex flex-col gap-4">
+                    <div class="text-center">
+                        <h3 id="ff-title" class="font-clash font-extrabold text-2xl text-pink-400 drop-shadow-md"></h3>
+                        <p id="ff-status" class="text-xs font-bold uppercase tracking-widest text-gray-300 mt-1"></p>
+                    </div>
+                    <div id="ff-table" class="flex flex-col gap-2"></div>
+
+                    <div id="ff-register" class="flex flex-col gap-3">
+                        <p class="text-xs font-bold uppercase tracking-widest text-gray-400">Registra</p>
+                        <div id="ff-kinds" class="grid grid-cols-4 gap-2"></div>
+                        <div id="ff-feedback-box" class="hidden flex flex-col gap-2">
+                            <p id="ff-feedback-label" class="text-xs font-bold text-pink-300"></p>
+                            <input id="ff-feedback" type="text" maxlength="300" placeholder="Com'è andata? (facoltativo)" onkeydown="if(event.key==='Enter') registraFF()" class="glass-input rounded-xl px-4 py-2 text-sm font-semibold w-full">
+                            <button onclick="registraFF()" class="w-full py-2 rounded-xl font-bold text-white tracking-widest uppercase bg-gradient-to-r from-pink-600 to-red-700 border border-white border-opacity-20 active:scale-95 transition-transform">Salva</button>
+                        </div>
+                    </div>
+
+                    <button id="ff-new-period" onclick="nuovoPeriodoFF()" class="hidden w-full py-3 rounded-xl font-bold text-white tracking-widest uppercase bg-gradient-to-r from-pink-600 to-red-700 border border-white border-opacity-20 shadow-lg active:scale-95 transition-transform">
+                        Nuovo periodo
+                    </button>
+
+                    <div class="flex flex-col gap-2">
+                        <p class="text-xs font-bold uppercase tracking-widest text-gray-400">Storico e feedback</p>
+                        <div id="ff-log" class="flex flex-col gap-2 max-h-72 overflow-y-auto"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEZIONE: VOTO DELLA SERATA (tabelle fanta_events / fanta_votes) -->
+        <section class="flex flex-col gap-4">
+            <h2 class="text-xl font-clash font-extrabold text-white px-2 drop-shadow-md">Voto della serata</h2>
 
             <div class="glass-card p-5 flex flex-col gap-4" style="background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.85)), url('img/bg-fanta.jpeg'); background-size: cover; background-position: center;">
                 <div id="fanta-setup" class="flex flex-col gap-3">
@@ -293,7 +338,10 @@
         <!-- SEZIONE: ARCHIVIO SERATE -->
         <section class="flex flex-col gap-4 mb-8">
             <div class="flex items-center justify-between px-2">
-                <h2 class="text-xl font-clash font-extrabold text-white drop-shadow-md">Archivio</h2>
+                <div>
+                    <h2 class="text-xl font-clash font-extrabold text-white drop-shadow-md">Archivio</h2>
+                    <p class="text-[11px] font-bold text-gray-400">Segnalazioni: 7 giorni, oppure per sempre col 🔒</p>
+                </div>
                 <i class="fa-solid fa-box-archive text-gray-400"></i>
             </div>
             <div id="archivio-list" class="flex flex-col gap-3"></div>
@@ -308,7 +356,8 @@
     <script src="js/fanta.js"></script>
     <script src="js/roulette.js"></script>
     <script src="js/sfide.js"></script>
-    <script src="js/serate.js"></script>
+    <script src="js/fantafiga.js"></script>
+    <script src="js/segnalazioni.js"></script>
     <script src="js/radar.js"></script>
     <script src="js/app.js"></script>
 </body>
