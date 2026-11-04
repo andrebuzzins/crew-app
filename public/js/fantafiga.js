@@ -9,9 +9,13 @@ const FF_KINDS = {
 const FF_SHOW_ENDED_DAYS = 7; // per quanti giorni resta visibile la classifica finale
 
 let ffPeriod = null;
-let ffEntries = [];
+let ffEntries = [];          // eventi del periodo mostrato
 let ffSelectedKind = null;
 let ffForceSetup = false;
+let ffAllPeriods = [];       // tutti i periodi (per lo storico)
+let ffAllEntries = [];       // tutti gli eventi di sempre (per la classifica totale)
+let ffShowTotal = true;
+const ffOpenPast = new Set();
 
 // Date in formato YYYY-MM-DD secondo l'ora italiana del telefono.
 const ffToday = () => new Date().toLocaleDateString('sv-SE');
@@ -22,22 +26,35 @@ const ffNotStarted = () => ffPeriod && ffToday() < ffPeriod.starts_on;
 
 async function initFantaFiga() {
   document.getElementById('ff-from').value = ffToday();
-  document.getElementById('ff-to').value = ffAddDays(ffToday(), 30);
+  // di default: da oggi fino all'ultimo giorno del mese
+  const now = new Date();
+  document.getElementById('ff-to').value = new Date(now.getFullYear(), now.getMonth() + 1, 0).toLocaleDateString('sv-SE');
   renderFantaFiga();
   if (!supa) return;
 
-  const { data } = await supa.from('ff_periods').select('*')
-    .gte('ends_on', ffAddDays(ffToday(), -FF_SHOW_ENDED_DAYS))
-    .order('created_at', { ascending: false }).limit(1);
-  if (data && data[0]) await ffSetPeriod(data[0]);
+  // Tutto lo storico: periodi ed eventi di sempre (sono pochi dati).
+  const [{ data: periods }, { data: all }] = await Promise.all([
+    supa.from('ff_periods').select('*').order('starts_on', { ascending: false }),
+    supa.from('ff_entries').select('id, period_id, member_id, kind'),
+  ]);
+  ffAllPeriods = periods || [];
+  ffAllEntries = all || [];
+
+  const recent = ffAllPeriods
+    .filter(p => p.ends_on >= ffAddDays(ffToday(), -FF_SHOW_ENDED_DAYS))
+    .sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
+  if (recent) await ffSetPeriod(recent);
+  else renderFantaFiga();
 
   supa.channel('fantafiga')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ff_periods' }, p => {
+      if (!ffAllPeriods.some(x => x.id === p.new.id)) ffAllPeriods.unshift(p.new);
       if (ffPeriod && ffPeriod.id === p.new.id) return;
       ffSetPeriod(p.new, []);
     })
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ff_entries' }, p => {
       const e = p.new;
+      if (!ffAllEntries.some(x => x.id === e.id)) { ffAllEntries.push(e); renderFFHistory(); }
       if (!ffPeriod || e.period_id !== ffPeriod.id || ffEntries.some(x => x.id === e.id)) return;
       ffEntries.unshift(e);
       renderFantaFiga();
@@ -50,6 +67,7 @@ async function initFantaFiga() {
     })
     .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'ff_entries' }, p => {
       ffEntries = ffEntries.filter(x => x.id !== p.old.id);
+      ffAllEntries = ffAllEntries.filter(x => x.id !== p.old.id);
       renderFantaFiga();
     })
     .subscribe();
@@ -81,6 +99,7 @@ async function creaPeriodoFF() {
     return;
   }
   document.getElementById('ff-name').value = '';
+  if (!ffAllPeriods.some(x => x.id === data.id)) ffAllPeriods.unshift(data);
   await ffSetPeriod(data, []);
 }
 
@@ -106,6 +125,7 @@ async function registraFF() {
   }
   if (navigator.vibrate) navigator.vibrate([30]);
   if (!ffEntries.some(x => x.id === data.id)) ffEntries.unshift(data);
+  if (!ffAllEntries.some(x => x.id === data.id)) ffAllEntries.push(data);
   showToast(`Registrato: ${FF_KINDS[data.kind].emoji} ${FF_KINDS[data.kind].label}`, me.avatar);
   ffSelectedKind = null;
   renderFantaFiga();
@@ -116,13 +136,75 @@ async function eliminaFF(id) {
   const { error } = await supa.from('ff_entries').delete().eq('id', id);
   if (error) { console.error(error); return showToast('Errore, riprova', me && me.avatar); }
   ffEntries = ffEntries.filter(x => x.id !== id);
+  ffAllEntries = ffAllEntries.filter(x => x.id !== id);
   renderFantaFiga();
+}
+
+// Tabella classifica (conteggi per tipo + totale) per un elenco di eventi.
+function ffTableHtml(entries) {
+  const rows = window.CREW_MEMBERS.map(m => {
+    const mine = entries.filter(e => e.member_id === m.id);
+    const counts = {};
+    Object.keys(FF_KINDS).forEach(k => { counts[k] = mine.filter(e => e.kind === k).length; });
+    return { m, counts, total: mine.length };
+  }).sort((a, b) => b.total - a.total);
+  const medals = ['🥇', '🥈', '🥉'];
+  return `
+    <div class="grid grid-cols-[1fr_repeat(5,1.6rem)] gap-x-0.5 items-center text-center text-[11px] font-bold text-gray-400 px-2">
+      <span></span>${Object.values(FF_KINDS).map(k => `<span title="${k.plural}">${k.emoji}</span>`).join('')}<span>TOT</span>
+    </div>` + rows.map((r, i) => `
+    <div class="grid grid-cols-[1fr_repeat(5,1.6rem)] gap-x-0.5 items-center text-center bg-black bg-opacity-40 p-2 rounded-2xl border border-white border-opacity-10">
+      <div class="flex items-center gap-2 text-left min-w-0">
+        <div class="relative flex-shrink-0">
+          <img src="${r.m.avatar}" style="${avatarPos(r.m)}" class="w-8 h-8 rounded-full object-cover border border-gray-500">
+          ${r.total > 0 && medals[i] ? `<span class="absolute -bottom-1 -right-1 text-xs leading-none">${medals[i]}</span>` : ''}
+        </div>
+        <span class="font-bold text-sm text-white truncate">${r.m.name}</span>
+      </div>
+      ${Object.keys(FF_KINDS).map(k => `<span class="font-clash font-bold ${r.counts[k] ? 'text-white' : 'text-gray-600'}">${r.counts[k]}</span>`).join('')}
+      <span class="font-clash font-extrabold text-pink-400">${r.total}</span>
+    </div>`).join('');
+}
+
+function toggleFFTotal() { ffShowTotal = !ffShowTotal; renderFFHistory(); }
+function toggleFFPast(id) { if (ffOpenPast.has(id)) ffOpenPast.delete(id); else ffOpenPast.add(id); renderFFHistory(); }
+
+// Classifica totale (tutti i periodi) + elenco dei periodi passati.
+function renderFFHistory() {
+  const box = document.getElementById('ff-history');
+  if (!box) return;
+  if (ffAllPeriods.length === 0) { box.innerHTML = ''; return; }
+
+  const past = ffAllPeriods.filter(p => p.ends_on < ffToday());
+  box.innerHTML = `
+    <button onclick="toggleFFTotal()" class="flex items-center justify-between w-full text-left">
+      <span class="text-xs font-bold uppercase tracking-widest text-yellow-400">🏆 Classifica totale · ${ffAllPeriods.length} period${ffAllPeriods.length === 1 ? 'o' : 'i'}</span>
+      <i class="fa-solid fa-chevron-${ffShowTotal ? 'up' : 'down'} text-gray-400"></i>
+    </button>
+    ${ffShowTotal ? `<div class="flex flex-col gap-2">${ffTableHtml(ffAllEntries)}</div>` : ''}
+    ${past.length ? `<p class="text-xs font-bold uppercase tracking-widest text-gray-400 mt-2">📅 Periodi passati</p>` : ''}
+    ${past.map(p => {
+      const ents = ffAllEntries.filter(e => e.period_id === p.id);
+      const open = ffOpenPast.has(p.id);
+      return `
+      <div class="py-2 border-b border-white border-opacity-10 flex flex-col gap-2">
+        <button onclick="toggleFFPast('${p.id}')" class="flex items-center justify-between w-full text-left">
+          <div>
+            <p class="font-bold text-white">${escapeHtml(p.name)}</p>
+            <p class="text-[11px] text-gray-400">dal ${ffFmt(p.starts_on)} al ${ffFmt(p.ends_on)} · ${ents.length} eventi</p>
+          </div>
+          <i class="fa-solid fa-chevron-${open ? 'up' : 'down'} text-gray-400"></i>
+        </button>
+        ${open ? ffTableHtml(ents) : ''}
+      </div>`;
+    }).join('')}`;
 }
 
 function renderFantaFiga() {
   const setup = document.getElementById('ff-setup');
   const main = document.getElementById('ff-main');
   if (!setup) return;
+  renderFFHistory();
   const showSetup = !ffPeriod || (ffForceSetup && !ffActive());
   setup.classList.toggle('hidden', !showSetup);
   main.classList.toggle('hidden', showSetup);
@@ -142,26 +224,8 @@ function renderFantaFiga() {
   }
   document.getElementById('ff-status').innerText = status;
 
-  // Classifica con conteggi per tipo
-  const rows = window.CREW_MEMBERS.map(m => {
-    const mine = ffEntries.filter(e => e.member_id === m.id);
-    const counts = {};
-    Object.keys(FF_KINDS).forEach(k => { counts[k] = mine.filter(e => e.kind === k).length; });
-    return { m, counts, total: mine.length };
-  }).sort((a, b) => b.total - a.total);
-  const medals = ['🥇', '🥈', '🥉'];
-  document.getElementById('ff-table').innerHTML = `
-    <div class="grid grid-cols-[1fr_repeat(5,1.6rem)] gap-x-0.5 items-center text-center text-[11px] font-bold text-gray-400 px-2">
-      <span></span>${Object.values(FF_KINDS).map(k => `<span title="${k.plural}">${k.emoji}</span>`).join('')}<span>TOT</span>
-    </div>` + rows.map((r, i) => `
-    <div class="grid grid-cols-[1fr_repeat(5,1.6rem)] gap-x-0.5 items-center text-center bg-black bg-opacity-40 p-2 rounded-2xl border border-white border-opacity-10">
-      <div class="flex items-center gap-2 text-left min-w-0">
-        <img src="${r.m.avatar}" style="${avatarPos(r.m)}" class="w-8 h-8 rounded-full object-cover border border-gray-500 flex-shrink-0">
-        <span class="font-bold text-sm text-white truncate">${r.total > 0 && medals[i] ? medals[i] + ' ' : ''}${r.m.name}</span>
-      </div>
-      ${Object.keys(FF_KINDS).map(k => `<span class="font-clash font-bold ${r.counts[k] ? 'text-white' : 'text-gray-600'}">${r.counts[k]}</span>`).join('')}
-      <span class="font-clash font-extrabold text-pink-400">${r.total}</span>
-    </div>`).join('');
+  // Classifica del periodo con conteggi per tipo
+  document.getElementById('ff-table').innerHTML = ffTableHtml(ffEntries);
 
   // Registrazione (solo durante il periodo)
   const reg = document.getElementById('ff-register');
